@@ -11,6 +11,8 @@ import com.example.cutestage.R
  * 1. 기본 시나리오 - 만남 (정적 이미지)
  * 2. 부부싸움 시나리오 (스프라이트 애니메이션)
  * 3. 옥순의 혼잣말 시나리오 (모든 애니메이션 활용)
+ * 4. 나는솔로 시나리오 (첫눈에 반한 소개팅)
+ * 5. 폭삭 속았수다 시나리오 (제주 가족 드라마)
  *
  * 동물의 숲 스타일 음성 포함
  */
@@ -37,20 +39,23 @@ object StageTestScenario {
      * 시나리오 타입
      */
     enum class ScenarioType {
-        BASIC, // 기본 만남
-        COUPLE_FIGHT, // 부부싸움
-        OKSUN_MONOLOGUE, // 옥순의 혼잣말
-        I_AM_SOLO, // 나는솔로 - 첫눈에 반한 소개팅
+        BASIC,            // 기본 만남
+        COUPLE_FIGHT,     // 부부싸움
+        OKSUN_MONOLOGUE,  // 옥순의 혼잣말
+        I_AM_SOLO,        // 나는솔로 - 첫눈에 반한 소개팅
+        FOOLISH_TRICK,    // 폭삭 속았수다 - 제1막 조기 밥상
     }
 
     /**
      * 현재 선택된 시나리오
      *
      * - BASIC: 기본 시나리오 (만남)
-     * - COUPLE_FIGHT: 부부싸움 시나리오 (기본값)
-     * - OKSUN_MONOLOGUE: 옥순의 혼잣말
+     * - COUPLE_FIGHT: 부부싸움 시나리오
+     * - OKSUN_MONOLOGUE: 옥순의 혼잣말 (기본값)
+     * - I_AM_SOLO: 나는솔로 - 첫눈에 반한 소개팅
+     * - FOOLISH_TRICK: 폭삭 속았수다 - 제1막 조기 밥상
      */
-    var currentScenario: ScenarioType = ScenarioType.OKSUN_MONOLOGUE
+    var currentScenario: ScenarioType = ScenarioType.FOOLISH_TRICK
 
     // 캐릭터별 음성 설정
     private val sangchulVoice = CharacterVoice(
@@ -74,6 +79,7 @@ object StageTestScenario {
      * - COUPLE_FIGHT: 부부싸움 시나리오
      * - OKSUN_MONOLOGUE: 옥순의 혼잣말 (기본값)
      * - I_AM_SOLO: 나는솔로 - 첫눈에 반한 소개팅
+     * - FOOLISH_TRICK: 폭삭 속았수다 - 제1막 조기 밥상
      */
     fun createTestScript() =
         when (currentScenario) {
@@ -81,6 +87,7 @@ object StageTestScenario {
             ScenarioType.COUPLE_FIGHT -> StageAnimatedScenario.createAnimatedScenario()
             ScenarioType.OKSUN_MONOLOGUE -> StageOksunMonologue.createMonologueScenario()
             ScenarioType.I_AM_SOLO -> createIAmSoloScenario()
+            ScenarioType.FOOLISH_TRICK -> StageFoolishTrick.createFoolishTrickScenario()
         }
 
     /**

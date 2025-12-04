@@ -42,10 +42,12 @@ fun StageScreen() {
             // Stage View
             item {
                 StageView(
-                    script = StageTestScenario.createTestScript(),
+                    script = null, // 빈 무대로 시작
                     modifier = Modifier.fillMaxWidth(),
                 )
-            } // 푸터
+            }
+
+            // 푸터
             item {
                 StageFooter()
             }

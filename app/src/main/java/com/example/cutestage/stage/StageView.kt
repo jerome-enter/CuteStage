@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -31,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.example.cutestage.R
 import kotlin.math.max
 import kotlinx.coroutines.delay
 
@@ -54,7 +56,7 @@ private fun calculateSafeDelay(
  * 클릭 시 테스트 시나리오가 자동으로 실행됩니다.
  *
  * @param modifier Modifier
- * @param script 실행할 스크립트 (null이면 클릭 시 테스트 시나리오 실행)
+ * @param script 실행할 스크립트 (null이면 빈 무대)
  * @param onScriptEnd 스크립트 종료 콜백
  */
 @Composable
@@ -62,9 +64,9 @@ fun StageView(
     modifier: Modifier = Modifier,
     script: TheaterScript? = null,
     onScriptEnd: () -> Unit = {},
-) { // 테스트 시나리오를 자동으로 로드 (초기에는 기본 시나리오)
+) { // 스크립트 설정 (null이면 빈 무대)
     var currentScript by remember {
-        mutableStateOf(script ?: StageTestScenario.createTestScript())
+        mutableStateOf(script)
     }
     var isPlaying by remember { mutableStateOf(false) } // 재생 속도 (1.0x, 1.5x, 2.0x)
     var playbackSpeed by remember { mutableStateOf(1.0f) } // 스크립트가 변경되면 씬 인덱스를 자동으로 0으로 리셋
@@ -88,10 +90,11 @@ fun StageView(
             .fillMaxWidth()
             .height(300.dp),
     ) {
-        // 무대 배경 (씬 변경 시 recomposition 보장)
+        // 무대 배경 ( 씬 변경 시 recomposition 보장)
         key(currentSceneIndex) {
             StageBackground(
-                backgroundRes = currentScene?.backgroundRes,
+                backgroundRes = currentScene?.backgroundRes
+                    ?: R.drawable.stage_floor, // 빈 무대일 때 기본 무대 바닥
                 modifier = Modifier.fillMaxSize(),
             )
         } // 캐릭터들 (씬 변경 시 recomposition 보장)
@@ -226,7 +229,32 @@ fun StageView(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-        } // 재생 속도 조절 버튼 (왼쪽 위)
+        } // 재생 중일 때 종료 버튼 표시 (오른쪽 하단)
+        if (isPlaying) {
+            Surface(
+                onClick = {
+                    isPlaying = false
+                    currentScript = null
+                    currentSceneIndex = 0
+                },
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.errorContainer,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 12.dp, end = 12.dp)
+                    .size(32.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "종료",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+        }
+        // 재생 속도 조절 버튼 (왼쪽 위)
         Surface(
             shape = RoundedCornerShape(12.dp),
             color = Color.Black.copy(alpha = 0.6f),
@@ -416,6 +444,12 @@ fun StageView(
                         expanded = showScenarioMenu,
                         onDismissRequest = { showScenarioMenu = false },
                     ) {
+                        DropdownMenuItem(text = { Text("폭삭 속았수다 🐟") }, onClick = {
+                            showScenarioMenu = false
+                            currentScript = StageFoolishTrick.createFoolishTrickScenario()
+                            currentSceneIndex = 0 // 씬 인덱스 명시적 리셋
+                            isPlaying = true
+                        })
                         DropdownMenuItem(text = { Text("옥순의 혼잣말") }, onClick = {
                             showScenarioMenu = false
                             StageTestScenario.currentScenario =
@@ -451,10 +485,11 @@ fun StageView(
                 } // 재생 버튼 (작은 크기)
                 Surface(
                     onClick = {
-                        // 처음부터 다시 시작
-                        currentScript = StageTestScenario.createTestScript()
-                        currentSceneIndex = 0 // 씬 인덱스 명시적 리셋
-                        isPlaying = true
+                        // 스크립트가 있을 때만 재생
+                        if (currentScript != null) {
+                            currentSceneIndex = 0 // 씬 인덱스 리셋
+                            isPlaying = true
+                        }
                     },
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.primaryContainer,
@@ -504,20 +539,18 @@ fun StageView(
  */
 @Composable
 private fun StageBackground(
-    @DrawableRes backgroundRes: Int?,
+    @DrawableRes backgroundRes: Int,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier.background(Color(0xFFF5F5DC)), // 기본 배경색
     ) {
-        backgroundRes?.let { resId ->
-            Image(
-                painter = painterResource(resId),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+        Image(
+            painter = painterResource(backgroundRes),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }
 
