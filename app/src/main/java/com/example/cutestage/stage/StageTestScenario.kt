@@ -1,0 +1,1423 @@
+package com.example.cutestage.stage
+
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.ui.unit.dp
+import com.example.cutestage.R
+
+/**
+ * 테스트용 연극 시나리오
+ *
+ * 세 가지 시나리오 제공:
+ * 1. 기본 시나리오 - 만남 (정적 이미지)
+ * 2. 부부싸움 시나리오 (스프라이트 애니메이션)
+ * 3. 옥순의 혼잣말 시나리오 (모든 애니메이션 활용)
+ *
+ * 동물의 숲 스타일 음성 포함
+ */
+object StageTestScenario {
+    /**
+     * 사용할 음성 엔진 타입 설정
+     *
+     * 변경 방법:
+     * ```
+     * StageTestScenario.voiceEngineType = VoiceSoundType.ANIMAL_VOICE
+     * ```
+     *
+     * - AUDIO_TRACK: 부드럽고 귀여운 소리 (기본값)
+     * - TONE_GENERATOR: 레트로 게임 느낌의 비프음
+     * - ANIMAL_VOICE: 동물의 숲 스타일 (Square Wave + Random Pitch)
+     */
+    var voiceEngineType: VoiceSoundType
+        get() = VoiceSoundManagerFactory.currentEngineType
+        set(value) {
+            VoiceSoundManagerFactory.currentEngineType = value
+        }
+
+    /**
+     * 시나리오 타입
+     */
+    enum class ScenarioType {
+        BASIC, // 기본 만남
+        COUPLE_FIGHT, // 부부싸움
+        OKSUN_MONOLOGUE, // 옥순의 혼잣말
+        I_AM_SOLO, // 나는솔로 - 첫눈에 반한 소개팅
+    }
+
+    /**
+     * 현재 선택된 시나리오
+     *
+     * - BASIC: 기본 시나리오 (만남)
+     * - COUPLE_FIGHT: 부부싸움 시나리오 (기본값)
+     * - OKSUN_MONOLOGUE: 옥순의 혼잣말
+     */
+    var currentScenario: ScenarioType = ScenarioType.OKSUN_MONOLOGUE
+
+    // 캐릭터별 음성 설정
+    private val sangchulVoice = CharacterVoice(
+        pitch = 0.8f, // 낮은 남자 목소리
+        speed = 90, // 느리게 말함
+        duration = 55,
+        volume = 0.6f,
+    )
+    private val oksunVoice = CharacterVoice(
+        pitch = 1.5f, // 높은 여자 목소리
+        speed = 65, // 빠르게 말함
+        duration = 48,
+        volume = 0.5f,
+    )
+
+    /**
+     * 테스트 시나리오 생성
+     *
+     * currentScenario 값에 따라 다른 시나리오 반환:
+     * - BASIC: 기본 시나리오 (만남)
+     * - COUPLE_FIGHT: 부부싸움 시나리오
+     * - OKSUN_MONOLOGUE: 옥순의 혼잣말 (기본값)
+     * - I_AM_SOLO: 나는솔로 - 첫눈에 반한 소개팅
+     */
+    fun createTestScript() =
+        when (currentScenario) {
+            ScenarioType.BASIC -> createBasicScenario()
+            ScenarioType.COUPLE_FIGHT -> StageAnimatedScenario.createAnimatedScenario()
+            ScenarioType.OKSUN_MONOLOGUE -> StageOksunMonologue.createMonologueScenario()
+            ScenarioType.I_AM_SOLO -> createIAmSoloScenario()
+        }
+
+    /**
+     * 기본 시나리오 - 만남
+     * 정적 이미지 사용
+     */
+    private fun createBasicScenario() =
+        theaterScript {
+            debug(true) // 씬 1: 빈 무대
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 1000L,
+            ) { // 빈 무대에서 시작
+            } // 씬 2: 남자 캐릭터 등장 (왼쪽에서)
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 30.dp,
+                    y = 150.dp,
+                    alpha = 0f,
+                    size = 100.dp,
+                    voice = sangchulVoice,
+                )
+
+                dialogue(
+                    text = "...",
+                    x = 100.dp,
+                    y = 60.dp,
+                    delayMillis = 800L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 3: 남자 캐릭터 페이드인
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 30.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    animationDuration = 800,
+                    voice = sangchulVoice,
+                )
+
+                dialogue(
+                    text = "여기가 어디지?",
+                    x = 100.dp,
+                    y = 60.dp,
+                    speakerName = "상철",
+                    delayMillis = 500L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 4: 남자 캐릭터 중앙으로 이동
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    animationDuration = 1000,
+                    voice = sangchulVoice,
+                )
+
+                dialogue(
+                    text = "주변을 둘러봐야겠어...",
+                    x = 150.dp,
+                    y = 60.dp,
+                    speakerName = "상철",
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 5: 여자 캐릭터 등장 (오른쪽에서)
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 280.dp,
+                    y = 150.dp,
+                    alpha = 0f,
+                    size = 100.dp,
+                    voice = oksunVoice,
+                )
+            } // 씬 6: 여자 캐릭터 페이드인
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 280.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    animationDuration = 800,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "앗!",
+                    x = 250.dp,
+                    y = 60.dp,
+                    speakerName = "옥순",
+                    delayMillis = 800L,
+                    typingSpeedMs = 100L,
+                    voice = oksunVoice,
+                )
+            } // 씬 7: 여자 가까이 이동
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 220.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    animationDuration = 800,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "안녕하세요!",
+                    x = 200.dp,
+                    y = 60.dp,
+                    speakerName = "옥순",
+                    delayMillis = 500L,
+                    voice = oksunVoice,
+                )
+            } // 씬 8: 남자 반응 (크기 강조)
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1.1f,
+                    animationDuration = 300,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 220.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "아, 안녕하세요!",
+                    x = 130.dp,
+                    y = 60.dp,
+                    speakerName = "상철",
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 9: 대화 - 여자
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1f,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 220.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1.1f,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "이 무대는 처음이세요?",
+                    x = 180.dp,
+                    y = 60.dp,
+                    speakerName = "옥순",
+                    delayMillis = 300L,
+                    voice = oksunVoice,
+                )
+            } // 씬 10: 대화 - 남자
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1.1f,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 220.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1f,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "네, 신기하네요!",
+                    x = 130.dp,
+                    y = 60.dp,
+                    speakerName = "상철",
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 11: 함께 점프 (감정 표현)
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 130.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1.15f,
+                    animationDuration = 400,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 220.dp,
+                    y = 130.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1.15f,
+                    animationDuration = 400,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "함께 모험을 떠나요!",
+                    x = 130.dp,
+                    y = 30.dp,
+                    delayMillis = 500L,
+                    voice = oksunVoice,
+                )
+            } // 씬 12: 원래 위치로
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 80.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1f,
+                    animationDuration = 400,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 220.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = true,
+                    scale = 1f,
+                    animationDuration = 400,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "좋아요!",
+                    x = 150.dp,
+                    y = 60.dp,
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 13: 함께 중앙으로 이동
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 130.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = false,
+                    animationDuration = 1000,
+                    easing = LinearEasing,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 170.dp,
+                    y = 150.dp,
+                    alpha = 1f,
+                    size = 100.dp,
+                    flipX = false,
+                    animationDuration = 1000,
+                    easing = LinearEasing,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "출발!",
+                    x = 140.dp,
+                    y = 60.dp,
+                    delayMillis = 1000L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 14: 페이드아웃
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "상철",
+                    x = 130.dp,
+                    y = 150.dp,
+                    alpha = 0f,
+                    size = 100.dp,
+                    flipX = false,
+                    animationDuration = 1500,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "옥순",
+                    x = 170.dp,
+                    y = 150.dp,
+                    alpha = 0f,
+                    size = 100.dp,
+                    flipX = false,
+                    animationDuration = 1500,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "다음 이야기에서 만나요!",
+                    x = 100.dp,
+                    y = 60.dp,
+                    delayMillis = 500L,
+                    voice = oksunVoice,
+                )
+            }
+        }
+
+    /**
+     * 나는솔로 시나리오 - 첫눈에 반한 소개팅
+     *
+     * "나는 솔로" 프로그램 컨셉으로 솔로나라에서 만난 남녀가
+     * 첫눈에 반해 꽁냥거리며 해피엔딩으로 끝나는 로맨틱 스토리
+     */
+    private fun createIAmSoloScenario() =
+        theaterScript {
+            debug(true) // 씬 1: 솔로나라 - 남자 혼자 대기 (긴장)
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 150.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 600,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                dialogue(
+                    text = "솔로나라에 드디어 왔네...",
+                    x = 130.dp,
+                    y = 60.dp,
+                    speakerName = "영수",
+                    delayMillis = 500L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 2: 긴장하는 남자
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 150.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    scale = 1.05f,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 400, // 더 빠른 애니메이션 = 긴장
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                dialogue(
+                    text = "과연 좋은 인연을 만날 수 있을까?",
+                    x = 100.dp,
+                    y = 60.dp,
+                    speakerName = "영수",
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 3: 여자 등장 (오른쪽에서)
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 80.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 270.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    alpha = 0f,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.WALKING,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 1500,
+                    voice = oksunVoice,
+                )
+            } // 씬 4: 여자 등장 완료 - 첫눈에 반함!
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 80.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    scale = 1.1f, // 심쿵
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 400,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 220.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    alpha = 1f,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "헉... 너무 예쁘신데?!",
+                    x = 110.dp,
+                    y = 60.dp,
+                    speakerName = "영수",
+                    delayMillis = 800L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 5: 여자도 첫눈에 반함
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 80.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 220.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    scale = 1.1f, // 심쿵
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 400,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "와... 완전 제 이상형이신데! 데헷~",
+                    x = 180.dp,
+                    y = 60.dp,
+                    speakerName = "영숙",
+                    delayMillis = 500L,
+                    voice = oksunVoice,
+                )
+            } // 씬 6: 어색한 인사
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 80.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 220.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "안, 안녕하세요... 저는 영수입니다!",
+                    x = 100.dp,
+                    y = 60.dp,
+                    speakerName = "영수",
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 7: 밝게 답하는 여자
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 80.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 220.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 450,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "안녕하세요~ 저는 영숙이에요! 반가워요!",
+                    x = 150.dp,
+                    y = 60.dp,
+                    speakerName = "영숙",
+                    delayMillis = 300L,
+                    voice = oksunVoice,
+                )
+            } // 씬 8: 대화 시작 - 공통 관심사
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 80.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 220.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "혹시 영화 보는 거 좋아하세요?",
+                    x = 110.dp,
+                    y = 60.dp,
+                    speakerName = "영수",
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 9: 신나는 여자
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 80.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 220.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    scale = 1.08f,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 400,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "헐! 저 영화 완전 좋아해요! 주말마다 봐요~",
+                    x = 140.dp,
+                    y = 60.dp,
+                    speakerName = "영숙",
+                    delayMillis = 300L,
+                    voice = oksunVoice,
+                )
+            } // 씬 10: 설레는 남자
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 80.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    scale = 1.1f,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 450,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 220.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "대박! 저도요! 우리 취향이 똑같네요!",
+                    x = 100.dp,
+                    y = 60.dp,
+                    speakerName = "영수",
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 11: 가까워지기
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 120.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.WALKING,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 1000,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 180.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.WALKING,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 1000,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "좀 더 가까이...",
+                    x = 140.dp,
+                    y = 60.dp,
+                    delayMillis = 1000L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 12: 서로 바라보기
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 120.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 180.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "오늘 정말 즐거웠어요...",
+                    x = 150.dp,
+                    y = 60.dp,
+                    speakerName = "영숙",
+                    delayMillis = 500L,
+                    voice = oksunVoice,
+                )
+            } // 씬 13: 고백하는 남자
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 120.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    scale = 1.05f,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 480,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 180.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "저... 영숙님, 최종 선택 때 저를 선택해주시겠어요?",
+                    x = 80.dp,
+                    y = 60.dp,
+                    speakerName = "영수",
+                    delayMillis = 500L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 14: 수줍게 답하는 여자
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 120.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 180.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    scale = 1.05f,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 450,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "저도... 영수님만 생각하고 있었어요. 헤헤~",
+                    x = 130.dp,
+                    y = 60.dp,
+                    speakerName = "영숙",
+                    delayMillis = 500L,
+                    voice = oksunVoice,
+                )
+            } // 씬 15: 기쁨 폭발!
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2500L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 120.dp,
+                    y = 130.dp,
+                    size = 100.dp,
+                    scale = 1.15f,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 350,
+                    ),
+                    animationDuration = 400,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 180.dp,
+                    y = 130.dp,
+                    size = 100.dp,
+                    scale = 1.15f,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.SPEAK_NORMAL,
+                        isAnimating = true,
+                        frameDuration = 350,
+                    ),
+                    animationDuration = 400,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "진짜요?! 너무 행복해요!",
+                    x = 120.dp,
+                    y = 30.dp,
+                    speakerName = "영수",
+                    delayMillis = 300L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 16: 다시 원위치
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 2000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 120.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 400,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 180.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = true,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 400,
+                    voice = oksunVoice,
+                )
+            } // 씬 17: 함께 중앙으로 (손잡고)
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 140.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = false,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.WALKING,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 1500,
+                    easing = LinearEasing,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 160.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = false,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.WALKING,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 1500,
+                    easing = LinearEasing,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "같이 가요~ ♥",
+                    x = 130.dp,
+                    y = 60.dp,
+                    delayMillis = 1500L,
+                    voice = oksunVoice,
+                )
+            } // 씬 18: 해피엔딩 - 커플 성사!
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 4000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 140.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = false,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 160.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    flipX = false,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "솔로나라에서 운명을 만났습니다! ♥♥♥",
+                    x = 90.dp,
+                    y = 60.dp,
+                    delayMillis = 500L,
+                    voice = sangchulVoice,
+                )
+            } // 씬 19: 페이드아웃 엔딩
+            scene(
+                backgroundRes = R.drawable.stage_floor,
+                durationMillis = 3000L,
+            ) {
+                character(
+                    id = "male",
+                    imageRes = R.drawable.stage_ch_m_1,
+                    name = "영수",
+                    x = 140.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    alpha = 0f,
+                    flipX = false,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.MALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 2000,
+                    voice = sangchulVoice,
+                )
+
+                character(
+                    id = "female",
+                    imageRes = R.drawable.stage_ch_f_1,
+                    name = "영숙",
+                    x = 160.dp,
+                    y = 150.dp,
+                    size = 100.dp,
+                    alpha = 0f,
+                    flipX = false,
+                    spriteAnimation = CharacterAnimationState(
+                        gender = CharacterGender.FEMALE,
+                        currentAnimation = CharacterAnimationType.IDLE,
+                        isAnimating = true,
+                        frameDuration = 500,
+                    ),
+                    animationDuration = 2000,
+                    voice = oksunVoice,
+                )
+
+                dialogue(
+                    text = "첫눈에 반한 사랑, 영원하길... ♥",
+                    x = 100.dp,
+                    y = 60.dp,
+                    delayMillis = 500L,
+                    voice = oksunVoice,
+                )
+            }
+        }
+}
