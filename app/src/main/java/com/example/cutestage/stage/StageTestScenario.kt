@@ -134,6 +134,7 @@ object StageTestScenario {
                 y = 150.dp,
                 alpha = 1f,
                 size = 100.dp,
+                flipX = true, // 왼쪽을 바라보도록 플립
                 spriteAnimation = CharacterAnimationState(
                     gender = CharacterGender.FEMALE,
                     currentAnimation = CharacterAnimationType.IDLE,

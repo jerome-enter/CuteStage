@@ -314,28 +314,28 @@ object CharacterInteractionSystem {
         when (emotion) {
             EmotionType.NORMAL -> CharacterVoice(
                 enabled = true,
-                pitch = 1.4f,
+                pitch = 1.7f, // 1.4f -> 1.7f (높게)
                 speed = 35,
                 duration = 70,
             )
 
             EmotionType.HAPPY -> CharacterVoice(
                 enabled = true,
-                pitch = 1.5f,
+                pitch = 1.8f, // 1.5f -> 1.8f (높게)
                 speed = 30,
                 duration = 65,
             )
 
             EmotionType.ANNOYED -> CharacterVoice(
                 enabled = true,
-                pitch = 1.3f,
+                pitch = 1.6f, // 1.3f -> 1.6f (높게)
                 speed = 40,
                 duration = 80,
             )
 
             EmotionType.ANGRY -> CharacterVoice(
                 enabled = true,
-                pitch = 1.2f,
+                pitch = 1.5f, // 1.2f -> 1.5f (높게)
                 speed = 45,
                 duration = 90,
             )
