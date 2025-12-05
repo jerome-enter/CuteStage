@@ -21,11 +21,10 @@ import com.example.cutestage.R
  * 스크롤 가능한 환경에서 연극 무대를 감상할 수 있습니다.
  *
  * 주요 기능:
- * - 여러 시나리오를 순차적으로 배치
- * - 스크롤하여 다양한 무대 감상
- * - 각 무대는 독립적으로 작동
+ * - StageView는 상단에 고정
+ * - bg_bottom.png만 스크롤되는 콘텐츠
+ * - bottom.png는 화면 하단에 고정
  * - bg.png를 전체 배경으로 사용
- * - 투명한 상단 앱바
  */
 @Composable
 fun StageScreen() {
@@ -43,47 +42,48 @@ fun StageScreen() {
             contentScale = ContentScale.Crop // 화면에 꽉 차도록
         )
 
-        // 하단 배경 이미지
+        // 콘텐츠 레이아웃
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding() // 시스템 상태바 영역 패딩 추가
+                .padding(top = 50.dp)
+        ) {
+            // StageView (고정, 스크롤되지 않음)
+            StageView(
+                script = StageTestScenario.createTestScript(), // PLAYGROUND 시나리오 자동 로드
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            // 스크롤 가능한 영역 (bg_bottom만 스크롤)
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f), // 남은 공간 전부 사용
+                contentPadding = PaddingValues(bottom = 0.dp), // bottom.png가 가리는 부분 고려
+            ) {
+                // 하단 배경 이미지 (스크롤되는 콘텐츠)
+                item {
+                    Image(
+                        painter = painterResource(id = R.drawable.bg_bottom),
+                        contentDescription = "Bottom Background",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.FillWidth // 가로는 꽉 채우고 세로는 비율 유지
+                    )
+                }
+            }
+        }
+
+        // 화면 하단에 고정되는 bottom.png (스크롤되지 않음)
         Image(
-            painter = painterResource(id = R.drawable.bg_bottom),
-            contentDescription = "Bottom Background",
+            painter = painterResource(id = R.drawable.bottom),
+            contentDescription = "Fixed Bottom",
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
             contentScale = ContentScale.FillWidth // 가로는 꽉 채우고 세로는 비율 유지
         )
-
-        // Scaffold with transparent background (타이틀 없음)
-        Scaffold(
-            containerColor = Color.Transparent, // 투명 배경으로 bg.png가 보이도록
-        ) { paddingValues ->
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
-                // 상단 여백 56dp
-                item {
-                    Spacer(modifier = Modifier.height(5.dp))
-                }
-
-                // Stage View
-                item {
-                    StageView(
-                        script = StageTestScenario.createTestScript(), // PLAYGROUND 시나리오 자동 로드
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-
-                // 푸터
-                item {
-                    StageFooter()
-                }
-            }
-        }
     }
 }
 
@@ -94,8 +94,8 @@ fun StageScreen() {
 private fun StageFooter() {
     Column(
         modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 32.dp),
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Divider(
