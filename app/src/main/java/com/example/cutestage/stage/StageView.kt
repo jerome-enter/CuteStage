@@ -88,9 +88,11 @@ fun StageView(
 
     Box(
         modifier = modifier
-                .padding(10.dp) // StageView 상하좌우 10dp 여백
-                .fillMaxWidth()
-                .height(300.dp).clip(RoundedCornerShape(16.dp)), // 네 모서리 16dp 라운드
+            .padding(10.dp) // StageView 상하좌우 10dp 여백
+            .fillMaxWidth()
+            .height(300.dp)
+            .clip(RoundedCornerShape(16.dp)) // 네 모서리 16dp 라운드
+            .background(Color.Black) // 검은색 배경
     ) {
         // 무대 배경 ( 씬 변경 시 recomposition 보장)
         key(currentSceneIndex) {
@@ -243,9 +245,9 @@ fun StageView(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.errorContainer,
                 modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(bottom = 12.dp, end = 12.dp)
-                        .size(32.dp),
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 12.dp, end = 12.dp)
+                    .size(32.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -262,8 +264,8 @@ fun StageView(
             shape = RoundedCornerShape(12.dp),
             color = Color.Black.copy(alpha = 0.6f),
             modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp),
+                .align(Alignment.TopStart)
+                .padding(8.dp),
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -320,8 +322,8 @@ fun StageView(
                 Text(
                     text = "Scene: ${currentSceneIndex + 1}/${theScript.scenes.size}",
                     modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp),
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White,
                 )
@@ -332,8 +334,8 @@ fun StageView(
             var showVoiceEngineMenu by remember { mutableStateOf(false) } // 음성 엔진 선택 버튼 (왼쪽 하단)
             Box(
                 modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = 12.dp, start = 12.dp),
+                    .align(Alignment.BottomStart)
+                    .padding(bottom = 12.dp, start = 12.dp),
             ) {
                 Surface(
                     onClick = { showVoiceEngineMenu = true },
@@ -422,8 +424,8 @@ fun StageView(
             } // 버튼들을 가로로 배치
             Row(
                 modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(bottom = 12.dp, end = 12.dp),
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 12.dp, end = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 // 시나리오 선택 버튼 (작은 크기)
@@ -697,13 +699,13 @@ private fun StageBackground(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.background(Color(0xFFF5F5DC)), // 기본 배경색
+        modifier = modifier.background(Color.Black),
     ) {
         Image(
             painter = painterResource(backgroundRes),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().background(color = Color.Black),
         )
     }
 }
@@ -801,26 +803,26 @@ private fun AnimatedCharacter(
             painter = painterResource(displayImageRes),
             contentDescription = character.name,
             modifier = Modifier
-                    .size(character.size)
-                    .offset(x = offsetX, y = offsetY)
-                    .graphicsLayer {
-                        scaleX = scale * if (character.flipX) -1f else 1f
-                        scaleY = scale
-                        this.alpha = alpha
-                        rotationZ = character.rotation
-                    }
-                    .then(
-                        if (isInteractive) {
-                            Modifier.clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                            ) {
-                                onCharacterClick(character)
-                            }
-                        } else {
-                            Modifier
-                        },
-                    ),
+                .size(character.size)
+                .offset(x = offsetX, y = offsetY)
+                .graphicsLayer {
+                    scaleX = scale * if (character.flipX) -1f else 1f
+                    scaleY = scale
+                    this.alpha = alpha
+                    rotationZ = character.rotation
+                }
+                .then(
+                    if (isInteractive) {
+                        Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            onCharacterClick(character)
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
         )
     }
 }
@@ -863,16 +865,16 @@ private fun AnimatedSpeechBubble(
     ) {
         Box(
             modifier = Modifier
-                    .fillMaxSize()
-                    .padding(5.dp), // 대화창이 StageView 경계에서 5dp 떨어지도록
+                .fillMaxSize()
+                .padding(5.dp), // 대화창이 StageView 경계에서 5dp 떨어지도록
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White,
+                color = Color.Black,
                 shadowElevation = 4.dp,
                 modifier = Modifier
-                        .offset(x = dialogue.position.x, y = dialogue.position.y)
-                        .widthIn(max = 200.dp),
+                    .offset(x = dialogue.position.x, y = dialogue.position.y)
+                    .widthIn(max = 200.dp),
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),
@@ -984,8 +986,8 @@ private fun InteractionSpeechBubble(
     ) {
         Box(
             modifier = Modifier
-                    .fillMaxSize()
-                    .padding(5.dp), // 대화창이 StageView 경계에서 5dp 떨어지도록
+                .fillMaxSize()
+                .padding(5.dp), // 대화창이 StageView 경계에서 5dp 떨어지도록
         ) {
             // 캐릭터 위치에 맞춰 말풍선 표시 (연극할 때와 같은 위치)
             Surface(
@@ -993,18 +995,18 @@ private fun InteractionSpeechBubble(
                 color = Color.White,
                 shadowElevation = 4.dp,
                 modifier = Modifier
-                        .offset(
-                            x = character.position.x + character.size / 2 - 100.dp,
-                            y = 60.dp, // 연극할 때와 같은 높이
-                        )
-                        .widthIn(max = 200.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) { // 클릭하면 즉시 닫기
-                            isDismissing = true
-                            onDismiss()
-                        },
+                    .offset(
+                        x = character.position.x + character.size / 2 - 100.dp,
+                        y = 60.dp, // 연극할 때와 같은 높이
+                    )
+                    .widthIn(max = 200.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { // 클릭하면 즉시 닫기
+                        isDismissing = true
+                        onDismiss()
+                    },
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),

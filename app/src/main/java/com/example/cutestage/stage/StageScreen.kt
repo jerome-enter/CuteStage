@@ -1,6 +1,7 @@
 package com.example.cutestage.stage
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,23 +33,22 @@ fun StageScreen() {
 
     // Box로 배경 이미지와 콘텐츠를 겹침
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black) // 검은색 배경 추가
     ) {
-        // 배경 이미지
-        Image(
-            painter = painterResource(id = R.drawable.bg),
-            contentDescription = "Background",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // 화면에 꽉 차도록
-        )
-
         // 콘텐츠 레이아웃
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding() // 시스템 상태바 영역 패딩 추가
-                .padding(top = 50.dp)
         ) {
+            Image(
+                painter = painterResource(R.drawable.top),
+                modifier = Modifier.fillMaxWidth(),
+                contentDescription = "Top",
+                contentScale = ContentScale.Crop // 화면에 꽉 차도록
+            )
+
             // StageView (고정, 스크롤되지 않음)
             StageView(
                 script = StageTestScenario.createTestScript(), // PLAYGROUND 시나리오 자동 로드
@@ -56,21 +56,26 @@ fun StageScreen() {
             )
 
             // 스크롤 가능한 영역 (bg_bottom만 스크롤)
-            LazyColumn(
-                state = listState,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f), // 남은 공간 전부 사용
-                contentPadding = PaddingValues(bottom = 0.dp), // bottom.png가 가리는 부분 고려
+                    .weight(1f) // 남은 공간 전부 사용
             ) {
-                // 하단 배경 이미지 (스크롤되는 콘텐츠)
-                item {
-                    Image(
-                        painter = painterResource(id = R.drawable.bg_bottom),
-                        contentDescription = "Bottom Background",
-                        modifier = Modifier.fillMaxWidth(),
-                        contentScale = ContentScale.FillWidth // 가로는 꽉 채우고 세로는 비율 유지
-                    )
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 70.dp), // bottom.png 높이만큼 여백
+                    verticalArrangement = Arrangement.Bottom, // 하단부터 콘텐츠 배치
+                ) {
+                    // 하단 배경 이미지 (스크롤되는 콘텐츠)
+                    item {
+                        Image(
+                            painter = painterResource(id = R.drawable.bg_bottom),
+                            contentDescription = "Bottom Background",
+                            modifier = Modifier.fillMaxWidth(),
+                            contentScale = ContentScale.FillWidth // 가로는 꽉 채우고 세로는 비율 유지
+                        )
+                    }
                 }
             }
         }
