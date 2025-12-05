@@ -37,35 +37,35 @@ object StageLoveConfession {
      * 15-20: 새드 엔딩 (거절한다 선택 시)
      */
     fun createLoveConfessionScenario() = theaterScript {
-        debug(true) // === 프롤로그: 오랜 친구 사이 (씬 0-2) ===
-        // 씬 0: 두 사람이 걸어 들어옴
+        debug(true) // === 프롤로그: 오랜 친구 사이 (씬 0-1) ===
+        // 씬 0: 두 사람이 걸어 들어옴 (짧게)
         scene(
             backgroundRes = R.drawable.stage_floor,
-            durationMillis = 4000L,
-        ) { // 남자 (왼쪽에서 걸어옴)
+            durationMillis = 2000L, // 4000 -> 2000으로 단축
+        ) { // 남자 (왼쪽에서 걸어옴, 보이게)
             character(
                 id = "male",
                 imageRes = R.drawable.stage_ch_m_1,
                 name = "준호",
-                x = (-100).dp,
+                x = (-50).dp, // -100 -> -50으로 시작 위치 가깝게
                 y = 150.dp,
                 size = 100.dp,
-                alpha = 0f,
+                alpha = 1f, // 0f -> 1f: 걸어오는 모습이 보이도록
                 spriteAnimation = CharacterAnimationState(
                     gender = CharacterGender.MALE,
                     currentAnimation = CharacterAnimationType.WALKING,
                     isAnimating = true,
                 ),
                 voice = maleVoice,
-            ) // 여자 (오른쪽에서 걸어옴)
+            ) // 여자 (오른쪽에서 걸어옴, 보이게)
             character(
                 id = "female",
                 imageRes = R.drawable.stage_ch_f_1,
                 name = "서연",
-                x = 400.dp,
+                x = 350.dp, // 400 -> 350으로 시작 위치 가깝게
                 y = 150.dp,
                 size = 100.dp,
-                alpha = 0f,
+                alpha = 1f, // 0f -> 1f: 걸어오는 모습이 보이도록
                 flipX = true,
                 spriteAnimation = CharacterAnimationState(
                     gender = CharacterGender.FEMALE,
@@ -74,10 +74,10 @@ object StageLoveConfession {
                 ),
                 voice = femaleVoice,
             )
-        } // 씬 1: 등장 - 서로 마주보는 위치로 이동
+        } // 씬 1: 등장 - 서로 마주보는 위치로 이동 (더 빠르게)
         scene(
             backgroundRes = R.drawable.stage_floor,
-            durationMillis = 3000L,
+            durationMillis = 2000L, // 3000 -> 2000으로 단축
         ) {
             character(
                 id = "male",
@@ -620,10 +620,11 @@ object StageLoveConfession {
                     frameDuration = 300,
                 ),
             )
-        } // 씬 14: 박수!
+        } // 씬 14: 박수! (해피 엔딩 종료)
         scene(
             backgroundRes = R.drawable.stage_floor,
             durationMillis = 4000L,
+            isEnding = true, // 여기서 시나리오 종료
         ) {
             character(
                 id = "male",
@@ -863,10 +864,11 @@ object StageLoveConfession {
                 delayMillis = 1000L,
                 voice = maleVoice,
             )
-        } // 씬 20: 새드 엔딩
+        } // 씬 20: 새드 엔딩 (시나리오 종료)
         scene(
             backgroundRes = R.drawable.stage_floor,
             durationMillis = 4000L,
+            isEnding = true, // 여기서 시나리오 종료
         ) {
             character(
                 id = "male",

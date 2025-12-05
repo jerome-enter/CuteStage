@@ -755,13 +755,19 @@ fun StageView(
                 pendingChoices = choicesDialogue.choices
             }
         }
-    } // 스크립트 타임라인 진행
+    }     // 스크립트 타임라인 진행
     LaunchedEffect(currentScript, currentSceneIndex, isPlaying, playbackSpeed, waitingForChoice) {
         val script = currentScript // 로컬 변수에 저장하여 smart cast 가능하도록
         if (isPlaying && script != null && !waitingForChoice) { // 선택지 대기 중이 아닐 때만 진행
             currentScene?.let { scene -> // 재생 속도에 따라 지연 시간 조정 (안전한 계산)
-                delay(calculateSafeDelay(scene.durationMillis, playbackSpeed))
-                if (currentSceneIndex < script.scenes.lastIndex) {
+                delay(calculateSafeDelay(scene.durationMillis, playbackSpeed)) // 종료 씬이면 여기서 시나리오 종료
+                if (scene.isEnding) {
+                    isPlaying = false
+                    onScriptEnd() // 시나리오 종료 후 PLAYGROUND로 복귀
+                    StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
+                    currentScript = StageTestScenario.createTestScript()
+                    currentSceneIndex = 0
+                } else if (currentSceneIndex < script.scenes.lastIndex) {
                     currentSceneIndex++
                 } else {
                     isPlaying = false
@@ -1223,6 +1229,7 @@ data class SceneState(
     val characters: List<CharacterState> = emptyList(),
     val dialogues: List<DialogueState> = emptyList(),
     val durationMillis: Long = 3000L,
+    val isEnding: Boolean = false, // true면 이 씬에서 시나리오 종료
 )
 
 /**

@@ -17,9 +17,10 @@ class TheaterScriptBuilder {
     fun scene(
         backgroundRes: Int? = null,
         durationMillis: Long = 3000L,
+        isEnding: Boolean = false,
         block: SceneBuilder.() -> Unit,
     ) {
-        val builder = SceneBuilder(backgroundRes, durationMillis)
+        val builder = SceneBuilder(backgroundRes, durationMillis, isEnding)
         builder.block()
         scenes.add(builder.build())
     }
@@ -41,6 +42,7 @@ class TheaterScriptBuilder {
 class SceneBuilder(
     @DrawableRes private val backgroundRes: Int?,
     private val durationMillis: Long,
+    private val isEnding: Boolean,
 ) {
     private val characters = mutableListOf<CharacterState>()
     private val dialogues = mutableListOf<DialogueState>()
@@ -111,6 +113,7 @@ class SceneBuilder(
             characters = characters,
             dialogues = dialogues,
             durationMillis = durationMillis,
+            isEnding = isEnding,
         )
 }
 
