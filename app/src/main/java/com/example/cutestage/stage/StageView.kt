@@ -613,6 +613,23 @@ fun StageView(
                                 currentSceneIndex = 0
                                 isPlaying = true
                             },
+                        ) // 하얀 바다새 (노래)
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Spacer(modifier = Modifier.size(20.dp))
+                                    Text("🎵 하얀 바다새 (듀엣)")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                currentScript = StageSongScenario.createWhiteSeagullScenario()
+                                currentSceneIndex = 0
+                                isPlaying = true
+                            },
                         )
                     }
                 } // 재생 버튼 (작은 크기)
