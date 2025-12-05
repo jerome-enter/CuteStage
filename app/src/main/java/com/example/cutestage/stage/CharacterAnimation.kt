@@ -14,6 +14,13 @@ enum class CharacterAnimationType {
     LISTENING, // 상대 말 듣기
     WALKING, // 걷기
     ANNOYED, // 짜증
+    CLAP, // 박수
+    DANCING_TYPE_A, // 춤 타입 A
+    DANCING_TYPE_B, // 춤 타입 B
+    DANCING_TYPE_C, // 춤 타입 C
+    SING_NORMAL, // 일반 노래
+    SING_CLIMAX, // 노래 클라이맥스
+    SING_PITCHUP, // 높은 음
 }
 
 /**
@@ -56,10 +63,17 @@ object CharacterAnimationResources {
             CharacterAnimationType.LISTENING -> "listening"
             CharacterAnimationType.WALKING -> if (gender == CharacterGender.MALE) "waking" else "walking" // 남자는 오타(waking)
             CharacterAnimationType.ANNOYED -> "annoyed"
+            CharacterAnimationType.CLAP -> "clap"
+            CharacterAnimationType.DANCING_TYPE_A -> "dancing_type_a"
+            CharacterAnimationType.DANCING_TYPE_B -> "dancing_type_b"
+            CharacterAnimationType.DANCING_TYPE_C -> "dancing_type_c"
+            CharacterAnimationType.SING_NORMAL -> "sing_nomal" // 파일명 오타(nomal)
+            CharacterAnimationType.SING_CLIMAX -> "sing_climax"
+            CharacterAnimationType.SING_PITCHUP -> "sing_pitchup"
         } // stage_{gender}_1_{animation}_{frame}
         val resourceName = "stage_${genderPrefix}_1_${animationSuffix}_$frame"
 
-        return when (resourceName) { // 남자 캐릭터
+        return when (resourceName) { // 남자 캐릭터 - 기본
             "stage_male_1_idle_1" -> R.drawable.stage_male_1_idle_1
             "stage_male_1_idle_2" -> R.drawable.stage_male_1_idle_2
             "stage_male_1_idle_annoyed_1" -> R.drawable.stage_male_1_idle_annoyed_1
@@ -73,7 +87,21 @@ object CharacterAnimationResources {
             "stage_male_1_waking_1" -> R.drawable.stage_male_1_waking_1
             "stage_male_1_waking_2" -> R.drawable.stage_male_1_waking_2
             "stage_male_1_annoyed_1" -> R.drawable.stage_male_1_annoyed_1
-            "stage_male_1_annoyed_2" -> R.drawable.stage_male_1_annoyed_2 // 여자 캐릭터
+            "stage_male_1_annoyed_2" -> R.drawable.stage_male_1_annoyed_2 // 남자 캐릭터 - 새로운 애니메이션
+            "stage_male_1_clap_1" -> R.drawable.stage_male_1_clap_1
+            "stage_male_1_clap_2" -> R.drawable.stage_male_1_clap_2
+            "stage_male_1_dancing_type_a_1" -> R.drawable.stage_male_1_dancing_type_a_1
+            "stage_male_1_dancing_type_a_2" -> R.drawable.stage_male_1_dancing_type_a_2
+            "stage_male_1_dancing_type_b_1" -> R.drawable.stage_male_1_dancing_type_b_1
+            "stage_male_1_dancing_type_b_2" -> R.drawable.stage_male_1_dancing_type_b_2
+            "stage_male_1_dancing_type_c_1" -> R.drawable.stage_male_1_dancing_type_c_1
+            "stage_male_1_dancing_type_c_2" -> R.drawable.stage_male_1_dancing_type_c_2
+            "stage_male_1_sing_nomal_1" -> R.drawable.stage_male_1_sing_nomal_1
+            "stage_male_1_sing_nomal_2" -> R.drawable.stage_male_1_sing_nomal_2
+            "stage_male_1_sing_climax_1" -> R.drawable.stage_male_1_sing_climax_1
+            "stage_male_1_sing_climax_2" -> R.drawable.stage_male_1_sing_climax_2
+            "stage_male_1_sing_pitchup_1" -> R.drawable.stage_male_1_sing_pitchup_1
+            "stage_male_1_sing_pitchup_2" -> R.drawable.stage_male_1_sing_pitchup_2 // 여자 캐릭터 - 기본
             "stage_female_1_idle_1" -> R.drawable.stage_female_1_idle_1
             "stage_female_1_idle_2" -> R.drawable.stage_female_1_idle_2
             "stage_female_1_idle_annoyed_1" -> R.drawable.stage_female_1_idle_annoyed_1
@@ -87,7 +115,21 @@ object CharacterAnimationResources {
             "stage_female_1_walking_1" -> R.drawable.stage_female_1_walking_1
             "stage_female_1_walking_2" -> R.drawable.stage_female_1_walking_2
             "stage_female_1_annoyed_1" -> R.drawable.stage_female_1_annoyed_1
-            "stage_female_1_annoyed_2" -> R.drawable.stage_female_1_annoyed_2
+            "stage_female_1_annoyed_2" -> R.drawable.stage_female_1_annoyed_2 // 여자 캐릭터 - 새로운 애니메이션
+            "stage_female_1_clap_1" -> R.drawable.stage_female_1_clap_1
+            "stage_female_1_clap_2" -> R.drawable.stage_female_1_clap_2
+            "stage_female_1_dancing_type_a_1" -> R.drawable.stage_female_1_dancing_type_a_1
+            "stage_female_1_dancing_type_a_2" -> R.drawable.stage_female_1_dancing_type_a_2
+            "stage_female_1_dancing_type_b_1" -> R.drawable.stage_female_1_dancing_type_b_1
+            "stage_female_1_dancing_type_b_2" -> R.drawable.stage_female_1_dancing_type_b_2
+            "stage_female_1_dancing_type_c_1" -> R.drawable.stage_female_1_dancing_type_c_1
+            "stage_female_1_dancing_type_c_2" -> R.drawable.stage_female_1_dancing_type_c_2
+            "stage_female_1_sing_nomal_1" -> R.drawable.stage_female_1_sing_nomal_1
+            "stage_female_1_sing_nomal_2" -> R.drawable.stage_female_1_sing_nomal_2
+            "stage_female_1_sing_climax_1" -> R.drawable.stage_female_1_sing_climax_1
+            "stage_female_1_sing_climax_2" -> R.drawable.stage_female_1_sing_climax_2
+            "stage_female_1_sing_pitchup_1" -> R.drawable.stage_female_1_sing_pitchup_1
+            "stage_female_1_sing_pitchup_2" -> R.drawable.stage_female_1_sing_pitchup_2
             else -> R.drawable.stage_ch_m_1 // 기본값
         }
     }
