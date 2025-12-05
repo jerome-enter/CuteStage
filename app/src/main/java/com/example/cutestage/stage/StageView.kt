@@ -88,11 +88,11 @@ fun StageView(
 
     Box(
         modifier = modifier
-            .padding(10.dp) // StageView 상하좌우 10dp 여백
-            .fillMaxWidth()
-            .height(300.dp)
-            .clip(RoundedCornerShape(16.dp)) // 네 모서리 16dp 라운드
-            .background(Color.Black) // 검은색 배경
+                .padding(10.dp) // StageView 상하좌우 10dp 여백
+                .fillMaxWidth()
+                .height(300.dp)
+                .clip(RoundedCornerShape(16.dp)) // 네 모서리 16dp 라운드
+                .background(Color.Black) // 검은색 배경
     ) {
         // 무대 배경 ( 씬 변경 시 recomposition 보장)
         key(currentSceneIndex) {
@@ -101,9 +101,8 @@ fun StageView(
                     ?: R.drawable.stage_floor, // 빈 무대일 때 기본 무대 바닥
                 modifier = Modifier.fillMaxSize(),
             )
-        } // 캐릭터들 (씬 변경 시 recomposition 보장)
-        currentScene?.characters?.forEachIndexed { index, character ->
-            // 상호작용 시 애니메이션 활성화
+        }         // 캐릭터들 (씬 변경 시 recomposition 보장)
+        currentScene?.characters?.forEachIndexed { index, character -> // 상호작용 시 애니메이션 활성화
             val isInteracting =
                 interactionCharacterId == character.id && interactionDialogue != null
             val interactionCharacter =
@@ -111,6 +110,11 @@ fun StageView(
                     val animationType =
                         CharacterInteractionSystem.getAnimationForEmotion(interactionEmotion)
                     character.copy(
+                        position = DpOffset(
+                            character.position.x,
+                            character.position.y - 10.dp
+                        ), // 앞으로 (y 감소)
+                        scale = 1.15f, // 크기 증가
                         spriteAnimation = character.spriteAnimation.copy(
                             currentAnimation = animationType,
                             isAnimating = true,
