@@ -15,12 +15,17 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -29,13 +34,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.example.cutestage.R
+import kotlinx.coroutines.Dispatchers
 import kotlin.math.max
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 재생 속도를 적용한 안전한 delay 계산
@@ -84,17 +93,24 @@ fun StageView(
     var femaleClickCount by remember { mutableStateOf(0) }
     var lastClickTime by remember { mutableStateOf(0L) } // 화난 상태 카운트 (3번 화내면 리셋)
     var maleAngryCount by remember { mutableStateOf(0) }
-    var femaleAngryCount by remember { mutableStateOf(0) } // 선택지 대기 상태
+    var femaleAngryCount by remember { mutableStateOf(0) }
     var waitingForChoice by remember { mutableStateOf(false) }
     var pendingChoices by remember { mutableStateOf<List<Choice>?>(null) }
+    var showDialog by remember { mutableStateOf(false) }
+    var userInput by remember { mutableStateOf("") }
+    var isGenerating by remember { mutableStateOf(false) }
+    var generationError by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = modifier
-                .padding(10.dp) // StageView 상하좌우 10dp 여백
-                .fillMaxWidth()
-                .height(300.dp)
-                .clip(RoundedCornerShape(16.dp)) // 네 모서리 16dp 라운드
-                .background(Color.Black) // 검은색 배경
+            .padding(10.dp) // StageView 상하좌우 10dp 여백
+            .fillMaxWidth()
+            .height(300.dp)
+            .clip(RoundedCornerShape(16.dp)) // 네 모서리 16dp 라운드
+            .background(Color.Black) // 검은색 배경
     ) {
         // 무대 배경 ( 씬 변경 시 recomposition 보장)
         key(currentSceneIndex) {
@@ -251,9 +267,9 @@ fun StageView(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.errorContainer,
                 modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(bottom = 12.dp, end = 12.dp)
-                        .size(32.dp),
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 12.dp, end = 12.dp)
+                    .size(32.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -270,8 +286,8 @@ fun StageView(
             shape = RoundedCornerShape(12.dp),
             color = Color.Black.copy(alpha = 0.6f),
             modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp),
+                .align(Alignment.TopStart)
+                .padding(8.dp),
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -328,8 +344,8 @@ fun StageView(
                 Text(
                     text = "Scene: ${currentSceneIndex + 1}/${theScript.scenes.size}",
                     modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp),
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White,
                 )
@@ -340,8 +356,8 @@ fun StageView(
             var showVoiceEngineMenu by remember { mutableStateOf(false) } // 음성 엔진 선택 버튼 (왼쪽 하단)
             Box(
                 modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = 12.dp, start = 12.dp),
+                    .align(Alignment.BottomStart)
+                    .padding(bottom = 12.dp, start = 12.dp),
             ) {
                 Surface(
                     onClick = { showVoiceEngineMenu = true },
@@ -430,8 +446,8 @@ fun StageView(
             } // 버튼들을 가로로 배치
             Row(
                 modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(bottom = 12.dp, end = 12.dp),
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 12.dp, end = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 // 시나리오 선택 버튼 (작은 크기)
@@ -658,6 +674,21 @@ fun StageView(
                                 isPlaying = true
                             },
                         )
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Spacer(modifier = Modifier.size(20.dp))
+                                    Text("AI 시나리오 생성")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                showDialog = true
+                            },
+                        )
                     }
                 } // 재생 버튼 (작은 크기)
                 Surface(
@@ -689,8 +720,8 @@ fun StageView(
                 color = Color.White.copy(alpha = 0.95f),
                 shadowElevation = 8.dp,
                 modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(20.dp),
+                    .align(Alignment.Center)
+                    .padding(20.dp),
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
@@ -779,6 +810,123 @@ fun StageView(
             }
         }
     }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isGenerating) {
+                    showDialog = false
+                    userInput = ""
+                    generationError = null
+                }
+            },
+            title = { Text("AI ") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "줄거리를 입력하면 AI가 자동으로 시나리오를 생성합니다.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                    TextField(
+                        value = userInput,
+                        onValueChange = { userInput = it },
+                        label = { Text("줄거리 입력") },
+                        placeholder = { Text("예: 두 사람이 무대에서 만나서 서로 인사를 나눕니다.") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        maxLines = 5,
+                        enabled = !isGenerating
+                    )
+                    if (isGenerating) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                            Text("AI가 시나리오를 생성중입니다...")
+                        }
+                    }
+                    generationError?.let { error ->
+                        Text(
+                            text = "오류: $error",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (userInput.isBlank()) return@Button
+                        coroutineScope.launch {
+                            isGenerating = true
+                            generationError = null
+                            try {
+                                // ScenarioConverter 초기화
+                                ScenarioConverter.init(context)
+
+                                // Gemini API 호출하여 시나리오 생성
+                                val generatedScenario = withContext(Dispatchers.IO) {
+                                    GeminiScenarioGenerator.generateScenario(context, userInput)
+                                }
+
+                                // status가 error인 경우 처리
+                                if (generatedScenario.status == "error") {
+                                    generationError = generatedScenario.message
+                                    return@launch
+                                }
+
+                                // TheaterScript
+                                val theaterScript =
+                                    ScenarioConverter.convertToTheaterScript(generatedScenario)
+
+                                //
+                                currentScript = theaterScript
+                                currentSceneIndex = 0
+                                isPlaying = true
+
+                                //
+                                showDialog = false
+                                userInput = ""
+                                isGenerating = false
+                                generationError = null
+                            } catch (e: Exception) {
+                                generationError = e.message ?: ""
+                                isGenerating = false
+                            }
+                        }
+                    },
+                    enabled = !isGenerating && userInput.isNotBlank()
+                ) {
+                    if (isGenerating) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("생성")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        if (!isGenerating) {
+                            showDialog = false
+                            userInput = ""
+                            generationError = null
+                        }
+                    },
+                    enabled = !isGenerating
+                ) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 /**
@@ -797,8 +945,8 @@ private fun StageBackground(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = Color.Black),
+                .fillMaxSize()
+                .background(color = Color.Black),
         )
     }
 }
@@ -896,26 +1044,26 @@ private fun AnimatedCharacter(
             painter = painterResource(displayImageRes),
             contentDescription = character.name,
             modifier = Modifier
-                    .size(character.size)
-                    .offset(x = offsetX, y = offsetY)
-                    .graphicsLayer {
-                        scaleX = scale * if (character.flipX) -1f else 1f
-                        scaleY = scale
-                        this.alpha = alpha
-                        rotationZ = character.rotation
-                    }
-                    .then(
-                        if (isInteractive) {
-                            Modifier.clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                            ) {
-                                onCharacterClick(character)
-                            }
-                        } else {
-                            Modifier
-                        },
-                    ),
+                .size(character.size)
+                .offset(x = offsetX, y = offsetY)
+                .graphicsLayer {
+                    scaleX = scale * if (character.flipX) -1f else 1f
+                    scaleY = scale
+                    this.alpha = alpha
+                    rotationZ = character.rotation
+                }
+                .then(
+                    if (isInteractive) {
+                        Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            onCharacterClick(character)
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
         )
     }
 }
@@ -958,19 +1106,19 @@ private fun AnimatedSpeechBubble(
     ) {
         Box(
             modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp), // 대화창이 StageView 경계에서 10dp 떨어지도록
+                .fillMaxSize()
+                .padding(10.dp), // 대화창이 StageView 경계에서 10dp 떨어지도록
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color.White, // 대화창 배경 흰색
                 shadowElevation = 4.dp,
                 modifier = Modifier
-                        .offset(
-                            x = dialogue.position.x.coerceIn(0.dp, 280.dp - 180.dp),
-                            y = dialogue.position.y.coerceIn(0.dp, 280.dp - 100.dp)
-                        )
-                        .widthIn(max = 180.dp),
+                    .offset(
+                        x = dialogue.position.x.coerceIn(0.dp, 280.dp - 180.dp),
+                        y = dialogue.position.y.coerceIn(0.dp, 280.dp - 100.dp)
+                    )
+                    .widthIn(max = 180.dp),
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),
@@ -1083,28 +1231,28 @@ private fun InteractionSpeechBubble(
     ) {
         Box(
             modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp), // 대화창이 StageView 경계에서 10dp 떨어지도록
+                .fillMaxSize()
+                .padding(10.dp), // 대화창이 StageView 경계에서 10dp 떨어지도록
         ) { // 캐릭터 위치에 맞춰 말풍선 표시 (연극할 때와 같은 위치)
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color.White,
                 shadowElevation = 4.dp,
                 modifier = Modifier
-                        .offset(
-                            x = (character.position.x + character.size / 2 - 90.dp).coerceIn(
-                                0.dp, 280.dp - 180.dp
-                            ),
-                            y = 60.dp, // 연극할 때와 같은 높이
-                        )
-                        .widthIn(max = 180.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) { // 클릭하면 즉시 닫기
-                            isDismissing = true
-                            onDismiss()
-                        },
+                    .offset(
+                        x = (character.position.x + character.size / 2 - 90.dp).coerceIn(
+                            0.dp, 280.dp - 180.dp
+                        ),
+                        y = 60.dp, // 연극할 때와 같은 높이
+                    )
+                    .widthIn(max = 180.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { // 클릭하면 즉시 닫기
+                        isDismissing = true
+                        onDismiss()
+                    },
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),
