@@ -1,7 +1,9 @@
 package com.example.cutestage.stage
 
+import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import com.example.cutestage.R
+import kotlinx.coroutines.delay
 
 /**
  * 노래 시나리오 - 하얀 바다새
@@ -264,9 +266,22 @@ object StageSongScenario {
     )
 
     /**
+     * 간주 - 춤
+     */
+    private fun interlude(): Phrase = Phrase(
+        notes = listOf(
+            Note(NoteFrequency.E, 600),
+            Note(NoteFrequency.D, 600),
+            Note(NoteFrequency.Cs, 600),
+            Note(NoteFrequency.B, 1200),
+        ), lyric = "🎵 간주 - 함께 춤을 🎵", singer = CharacterGender.MALE, // 더미 (둘 다 춤)
+        animation = CharacterAnimationType.DANCING_TYPE_A
+    )
+
+    /**
      * 엔딩
      */
-    private fun ending(): List<Phrase> = listOf( // 아루 아루 아 새야
+    private fun ending(): List<Phrase> = listOf( // 아루 아루 아 새야 (함께 - 하모니)
         Phrase(
             notes = listOf(
                 Note(NoteFrequency.B, 500),
@@ -275,25 +290,9 @@ object StageSongScenario {
                 Note(NoteFrequency.A, 500),
                 Note(NoteFrequency.G, 500),
                 Note(NoteFrequency.Fs, 500),
-                Note(NoteFrequency.Fs, 1000),
-            ),
-            lyric = "아루 아루 아 새야",
-            singer = CharacterGender.MALE,
-            animation = CharacterAnimationType.SING_NORMAL
-        ), // 아루 아루 아 새야 (반복)
-        Phrase(
-            notes = listOf(
-                Note(NoteFrequency.B, 500),
-                Note(NoteFrequency.B, 500),
-                Note(NoteFrequency.A, 500),
-                Note(NoteFrequency.A, 500),
-                Note(NoteFrequency.G, 500),
-                Note(NoteFrequency.Fs, 500),
-                Note(NoteFrequency.Fs, 1500),
-            ),
-            lyric = "아루 아루 아 새야",
-            singer = CharacterGender.FEMALE,
-            animation = CharacterAnimationType.SING_NORMAL
+                Note(NoteFrequency.Fs, 2000),
+            ), lyric = "아루 아루 아 새야 ♥", singer = CharacterGender.MALE, // 함께 부르기 (하모니)
+            animation = CharacterAnimationType.SING_CLIMAX
         )
     )
 
@@ -302,9 +301,11 @@ object StageSongScenario {
      */
     fun createWhiteSeagullScenario() = theaterScript {
         debug(true) // 노래 전체 구성
-        val allPhrases = verse1() + verse2() + bridge() + verse1() + ending() // 각 구절을 씬으로 변환
+        val allPhrases = verse1() + verse2() + bridge() + listOf(interlude()) + verse1() + ending()         // 각 구절을 씬으로 변환
         allPhrases.forEach { phrase -> // 총 지속 시간 계산 (음표 duration 합계 + 여유 시간)
-            val totalDuration = phrase.notes.sumOf { it.duration.toLong() } + 500L
+            val totalDuration = phrase.notes.sumOf { it.duration.toLong() } + 500L // 간주인지 확인
+            val isInterlude = phrase.lyric.contains("간주") // 엔딩(하모니)인지 확인
+            val isHarmony = phrase.lyric.contains("♥")
 
             scene(
                 backgroundRes = R.drawable.stage_floor,
@@ -319,13 +320,14 @@ object StageSongScenario {
                     size = 100.dp,
                     spriteAnimation = CharacterAnimationState(
                         gender = CharacterGender.MALE,
-                        currentAnimation = if (phrase.singer == CharacterGender.MALE) {
-                            phrase.animation
-                        } else {
-                            CharacterAnimationType.LISTENING // 듣기
+                        currentAnimation = when {
+                            isInterlude -> CharacterAnimationType.DANCING_TYPE_A // 간주: 춤
+                            isHarmony -> CharacterAnimationType.SING_CLIMAX // 엔딩: 함께 노래
+                            phrase.singer == CharacterGender.MALE -> phrase.animation // 본인 차례
+                            else -> CharacterAnimationType.LISTENING // 듣기
                         },
                         isAnimating = true,
-                        frameDuration = 500,
+                        frameDuration = if (isInterlude) 300 else 500,
                     ),
                     voice = CharacterVoice(
                         pitch = 0.8f,
@@ -343,13 +345,14 @@ object StageSongScenario {
                     size = 100.dp,
                     spriteAnimation = CharacterAnimationState(
                         gender = CharacterGender.FEMALE,
-                        currentAnimation = if (phrase.singer == CharacterGender.FEMALE) {
-                            phrase.animation
-                        } else {
-                            CharacterAnimationType.LISTENING // 듣기
+                        currentAnimation = when {
+                            isInterlude -> CharacterAnimationType.DANCING_TYPE_B // 간주: 춤 (다른 타입)
+                            isHarmony -> CharacterAnimationType.SING_CLIMAX // 엔딩: 함께 노래
+                            phrase.singer == CharacterGender.FEMALE -> phrase.animation // 본인 차례
+                            else -> CharacterAnimationType.LISTENING // 듣기
                         },
                         isAnimating = true,
-                        frameDuration = 500,
+                        frameDuration = if (isInterlude) 300 else 500,
                     ),
                     voice = CharacterVoice(
                         pitch = 1.5f,
@@ -358,12 +361,21 @@ object StageSongScenario {
                         volume = 0.5f,
                     ),
                 ) // 가사 표시
-                val xPos = if (phrase.singer == CharacterGender.MALE) 100.dp else 200.dp
+                val xPos = when {
+                    isInterlude || isHarmony -> 130.dp // 중앙
+                    phrase.singer == CharacterGender.MALE -> 100.dp
+                    else -> 200.dp
+                }
+                val speakerName = when {
+                    isInterlude || isHarmony -> null // 화자 없음
+                    phrase.singer == CharacterGender.MALE -> "영수"
+                    else -> "영숙"
+                }
                 dialogue(
                     text = phrase.lyric,
                     x = xPos,
                     y = 60.dp,
-                    speakerName = if (phrase.singer == CharacterGender.MALE) "영수" else "영숙",
+                    speakerName = speakerName,
                     delayMillis = 200L,
                     voice = if (phrase.singer == CharacterGender.MALE) {
                         CharacterVoice(pitch = 0.8f, speed = 90, duration = 55, volume = 0.6f)
