@@ -8,9 +8,9 @@ import com.example.cutestage.R
 
 /**
  * GeneratedScenario를 TheaterScript로 변환하는 유틸리티
+ * gender + animation 기반으로 올바른 애니메이션 시스템 활용
  */
 object ScenarioConverter {
-
     /**
      * Context를 저장하기 위한 변수
      */
@@ -29,205 +29,143 @@ object ScenarioConverter {
      * @param generatedScenario Gemini가 생성한 시나리오
      * @return TheaterScript 변환된 시나리오
      */
-    fun convertToTheaterScript(generatedScenario: GeneratedScenario): TheaterScript {
-        // 씬을 order 순서대로 정렬
-        val sortedScenes = generatedScenario.scenes
-            .filter { it.resourceId != "narrator" } // narrator 제외
-            .sortedBy { it.order }
+    fun convertToTheaterScript(generatedScenario: GeneratedScenario): TheaterScript { // 씬을 order 순서대로 정렬
+        val sortedScenes =
+            generatedScenario.scenes.sortedBy { it.order } // order별로 그룹화 (같은 order = 같은 씬)
+        val groupedScenes = sortedScenes.groupBy { it.order }
 
-        // order가 같은 씬들을 그룹화하여 하나의 SceneState로 합치기
-        // 하지만 대부분의 경우 각 order마다 하나의 캐릭터만 있으므로,
-        // 모든 등장 캐릭터를 추적하여 매 씬마다 배치
-        val allCharacters = mutableMapOf<String, Pair<GeneratedScene, ScenePosition?>>()
-        sortedScenes.forEach { scene ->
-            val key = "${scene.name}-${scene.resourceId.substringBeforeLast("_")}" // 프레임 번호 제외
-            allCharacters[key] = Pair(scene, scene.position)
-        }
-
-        Log.d("ScenarioConverter", "Total characters collected: ${allCharacters.size}")
-        allCharacters.forEach { (key, pair) ->
-            Log.d(
-                "ScenarioConverter",
-                "Character: $key, resource=${pair.first.resourceId}, pos=${pair.second}"
-            )
-        }
-
-        // 씬별로 변환 (모든 캐릭터를 매 씬에 배치하되, 대사는 해당 씬의 캐릭터만)
-        val scenes = sortedScenes.mapIndexed { index, speakingScene ->
-            convertToSceneStateWithAllCharacters(speakingScene, allCharacters, index)
+        Log.d("ScenarioConverter", "Total scene groups: ${groupedScenes.size}")
+        groupedScenes.forEach { (order, scenes) ->
+            Log.d("ScenarioConverter", "Order $order: ${scenes.size} characters")
+            scenes.forEach { scene ->
+                Log.d(
+                    "ScenarioConverter",
+                    "  - ${scene.name} (${scene.gender}/${scene.animation}): \"${scene.dialogue}\""
+                )
+            }
+        } // 각 order 그룹을 하나의 SceneState로 변환
+        val sceneStates = groupedScenes.map { (order, scenesInGroup) ->
+            convertToSceneStateFromGroup(scenesInGroup, order)
         }
 
         return TheaterScript(
-            scenes = scenes,
-            debug = false
+            scenes = sceneStates, debug = false
         )
     }
 
     /**
-     * GeneratedScene을 SceneState로 변환 (모든 캐릭터 포함)
+     * 같은 order를 가진 씬 그룹을 하나의 SceneState로 변환
      */
-    private fun convertToSceneStateWithAllCharacters(
-        speakingScene: GeneratedScene,
-        allCharacters: Map<String, Pair<GeneratedScene, ScenePosition?>>,
-        sceneIndex: Int
-    ): SceneState {
-        // 모든 캐릭터 생성
-        val characters = allCharacters.map { (key, pair) ->
-            val (charScene, position) = pair
-            createCharacterFromResourceId(
-                resourceId = charScene.resourceId,
-                name = charScene.name,
-                position = position
+    private fun convertToSceneStateFromGroup(
+        scenesInGroup: List<GeneratedScene>,
+        order: Int,
+    ): SceneState { // 모든 캐릭터 생성 (gender + animation 기반)
+        val characters = scenesInGroup.map { scene ->
+            createCharacterFromGenderAndAnimation(
+                name = scene.name,
+                gender = scene.gender,
+                animation = scene.animation,
+                position = scene.position
             )
-        }
+        } // 대사가 있는 캐릭터 찾기 (빈 문자열이 아닌 경우)
+        val speakingScene =
+            scenesInGroup.firstOrNull { it.dialogue.isNotBlank() } // 대화 생성 (대사가 있는 경우만)
+        val dialogues = if (speakingScene != null) {
+            val xPosition = (speakingScene.position?.x ?: 50).toFloat() * 2.5f
+            val dialogueX = xPosition
+            val dialogueY = 30.dp
 
-        Log.d(
-            "ScenarioConverter",
-            "Scene $sceneIndex: Placed ${characters.size} characters, speaker=${speakingScene.name}"
-        )
-
-        // 현재 말하는 캐릭터의 위치 계산
-        val speakerPosition = speakingScene.position
-        val xPosition = (speakerPosition?.x ?: 50).toFloat() * 2.5f // 0-100 -> 0-250dp
-        val dialogueX = xPosition
-        val dialogueY = 30.dp
-
-        // 대화 생성 (현재 말하는 캐릭터만)
-        val dialogues = listOf(
-            DialogueState(
+            listOf(
+                DialogueState(
                 text = speakingScene.dialogue,
                 position = DpOffset(dialogueX.dp, dialogueY),
                 speakerName = speakingScene.name,
                 delayMillis = 500L,
                 typingSpeedMs = 50L,
                 voice = run {
-                    val isMale = speakingScene.resourceId.contains("male", ignoreCase = true)
+                    val isMale = speakingScene.gender.equals("male", ignoreCase = true)
                     if (isMale) {
                         CharacterVoice(
                             enabled = true,
-                            pitch = 0.5f,
-                            duration = 40,
-                            volume = 0.5f,
-                            speed = 50
+                            pitch = 0.9f,
+                            duration = 60,
+                            volume = 0.6f,
+                            speed = 80
                         )
                     } else {
                         CharacterVoice(
                             enabled = true,
-                            pitch = 0.9f,
-                            duration = 50,
+                            pitch = 1.8f,
+                            duration = 45,
                             volume = 0.5f,
-                            speed = 50
+                            speed = 70
                         )
                     }
-                }
-            )
+                }))
+        } else {
+            emptyList()
+        } // 대사 길이에 따른 시간 계산
+        val duration = if (speakingScene == null) {
+            2000L  // 대사 없으면 2초
+        } else {
+            3000L + (speakingScene.dialogue.length * 80L)
+        }
+
+        Log.d(
+            "ScenarioConverter",
+            "Scene $order: ${characters.size} characters, speaker=${speakingScene?.name ?: "none"}, duration=${duration}ms"
         )
 
         return SceneState(
             backgroundRes = R.drawable.stage_floor,
             characters = characters,
             dialogues = dialogues,
-            durationMillis = 3000L + (speakingScene.dialogue.length * 50L)
+            durationMillis = duration
         )
     }
 
     /**
-     * GeneratedScene을 SceneState로 변환 (이전 버전 - 사용 안 함)
+     * gender + animation으로부터 캐릭터 생성
+     * 애니메이션 시스템을 올바르게 활용
      */
-    private fun convertToSceneState(generatedScene: GeneratedScene): SceneState {
-
-        // 위치 계산 (x: 0-100 -> dp, z: 0-50 -> dp)
-        val xPosition = (generatedScene.position?.x ?: 50).toFloat() * 2.5f // 0-100 -> 0-250dp
-        val zPosition = (generatedScene.position?.z
-            ?: 40).toFloat() * 4f // 0-50 -> 0-200dp (y축 깊이), 기본값 40으로 바닥쪽 배치
-
-        // 캐릭터 생성 
-        val characters = listOf(
-            createCharacterFromResourceId(
-                resourceId = generatedScene.resourceId,
-                name = generatedScene.name,
-                position = generatedScene.position
-            )
-        )
-
-        // 말풍선 위치 계산 (캐릭터 위쪽에 배치)
-        // 캐릭터가 바닥쪽(z=35-45, y=140-180dp)에 있으므로 말풍선은 더 위쪽(y=30-50dp)에 배치
-        val dialogueX = xPosition // 캐릭터 x 위치와 동일
-        val dialogueY = 30.dp // 고정 위치 (화면 상단 근처)
-
-        // 대화 생성
-        val dialogues = listOf(
-            DialogueState(
-                text = generatedScene.dialogue,
-                position = DpOffset(dialogueX.dp, dialogueY), // 캐릭터 기반 위치
-                speakerName = generatedScene.name,
-                delayMillis = 500L,
-                typingSpeedMs = 50L,
-                voice = run {
-                    // 캐릭터 성별 판단
-                    val isMale = generatedScene.resourceId.contains("male", ignoreCase = true)
-                    if (isMale) {
-                        CharacterVoice(
-                            enabled = true,
-                            pitch = 0.5f,
-                            duration = 40,
-                            volume = 0.5f,
-                            speed = 50
-                        )
-                    } else {
-                        CharacterVoice(
-                            enabled = true,
-                            pitch = 0.9f,
-                            duration = 50,
-                            volume = 0.5f,
-                            speed = 50
-                        )
-                    }
-                }
-            )
-        )
-
-        return SceneState(
-            backgroundRes = R.drawable.stage_floor,
-            characters = characters,
-            dialogues = dialogues,
-            durationMillis = 3000L + (generatedScene.dialogue.length * 50L) // 대사 길이에 따라 시간 조정
-        )
-    }
-
-    /**
-     * resource_id로부터 캐릭터 생성
-     * Gemini가 준 resource_id를 직접 사용
-     */
-    private fun createCharacterFromResourceId(
-        resourceId: String,
+    private fun createCharacterFromGenderAndAnimation(
         name: String,
-        position: ScenePosition?
+        gender: String,
+        animation: String,
+        position: ScenePosition?,
     ): CharacterState {
         Log.d(
             "ScenarioConverter",
-            "Creating character: name=$name, resourceId=$resourceId, position=$position"
+            "Creating character: name=$name, gender=$gender, animation=$animation, position=$position"
+        ) // 위치 계산 (x: 0-100 -> dp, z: 0-50 -> dp)
+        val xPosition = (position?.x ?: 50).toFloat() * 2.5f // 0-100 -> 0-250dp
+        val zPosition = (position?.z
+            ?: 40).toFloat() * 4f // 0-50 -> 0-200dp (y축 깊이), 기본값 40으로 바닥쪽 배치 // gender 문자열 → CharacterGender enum
+        val characterGender = when (gender.lowercase()) {
+            "male" -> CharacterGender.MALE
+            "female" -> CharacterGender.FEMALE
+            else -> {
+                Log.w("ScenarioConverter", "Unknown gender: $gender, defaulting to MALE")
+                CharacterGender.MALE
+            }
+        } // animation 문자열 → CharacterAnimationType enum
+        val animationType = parseAnimationType(animation) // 기본 drawable (사용되지 않지만 필수)
+        val drawableResId = if (characterGender == CharacterGender.MALE) {
+            R.drawable.stage_ch_m_1
+        } else {
+            R.drawable.stage_ch_f_1
+        } // 스프라이트 애니메이션 설정 (자동으로 프레임 관리)
+        val spriteAnimation = CharacterAnimationState(
+            gender = characterGender,
+            currentAnimation = animationType,
+            isAnimating = true,
+            frameDuration = 500
         )
 
-        // 위치 계산 (x: 0-100 -> dp, z: 0-50 -> dp)
-        val xPosition = (position?.x ?: 50).toFloat() * 2.5f // 0-100 -> 0-250dp
-        val zPosition =
-            (position?.z ?: 40).toFloat() * 4f // 0-50 -> 0-200dp (y축 깊이), 기본값 40으로 바닥쪽 배치
-
-        // 성별 판단
-        val isMale = resourceId.contains("male", ignoreCase = true)
-        val gender = if (isMale) CharacterGender.MALE else CharacterGender.FEMALE
-
-        // 애니메이션 타입 추출
-        val animationType = extractAnimationType(resourceId)
-
-        // resource_id에서 직접 drawable 리소스 ID 가져오기
-        val drawableResId = getDrawableResourceId(resourceId)
-
         return CharacterState(
-            id = "$name-$resourceId",
+            id = "$name-$gender-$animation",
             name = name,
-            imageRes = drawableResId,
+            imageRes = drawableResId,  // 애니메이션 시스템이 자동으로 교체
             position = DpOffset(xPosition.dp, zPosition.dp),
             size = 100.dp,
             alpha = 1f,
@@ -235,105 +173,33 @@ object ScenarioConverter {
             rotation = 0f,
             flipX = false,
             animationDuration = 500,
-            spriteAnimation = null
+            spriteAnimation = spriteAnimation  // ✅ 올바른 애니메이션 시스템 활용!
         )
     }
 
     /**
-     * resource_id 문자열에서 직접 drawable 리소스 ID 가져오기
+     * animation 문자열을 CharacterAnimationType enum으로 변환
      */
-    private fun getDrawableResourceId(resourceId: String): Int {
-        val context = appContext ?: return R.drawable.stage_ch_m_1
-
-        // resource_id에서 확장자 제거 (이미 없지만 혹시 모르니)
-        val cleanResourceId = resourceId.replace(".png", "")
-
-        // Context를 통해 리소스 ID 찾기
-        val resId =
-            context.resources.getIdentifier(cleanResourceId, "drawable", context.packageName)
-
-        // 로그 출력
-        if (resId != 0) {
-            Log.d("ScenarioConverter", "✅ Resource found: $cleanResourceId -> $resId")
-        } else {
-            Log.w("ScenarioConverter", "❌ Resource NOT found: $cleanResourceId, using default")
-        }
-
-        return if (resId != 0) resId else R.drawable.stage_ch_m_1
-    }
-
-    /**
-     * resource_id에서 애니메이션 타입 추출
-     * 예: "stage_female_1_walking_1" -> WALKING
-     */
-    private fun extractAnimationType(resourceId: String): CharacterAnimationType {
-        return when {
-            resourceId.contains("walking", ignoreCase = true) ||
-                    resourceId.contains(
-                        "waking",
-                        ignoreCase = true
-                    ) -> CharacterAnimationType.WALKING
-
-            resourceId.contains(
-                "speak_angry",
-                ignoreCase = true
-            ) -> CharacterAnimationType.SPEAK_ANGRY
-
-            resourceId.contains("speak_normal", ignoreCase = true) ||
-                    resourceId.contains(
-                        "speak",
-                        ignoreCase = true
-                    ) -> CharacterAnimationType.SPEAK_NORMAL
-
-            resourceId.contains("listening", ignoreCase = true) -> CharacterAnimationType.LISTENING
-
-            resourceId.contains(
-                "idle_annoyed",
-                ignoreCase = true
-            ) -> CharacterAnimationType.IDLE_ANNOYED
-
-            resourceId.contains("annoyed", ignoreCase = true) -> CharacterAnimationType.ANNOYED
-            resourceId.contains("idle", ignoreCase = true) -> CharacterAnimationType.IDLE
-
-            resourceId.contains(
-                "sing_climax",
-                ignoreCase = true
-            ) -> CharacterAnimationType.SING_CLIMAX
-
-            resourceId.contains(
-                "sing_pitchup",
-                ignoreCase = true
-            ) -> CharacterAnimationType.SING_PITCHUP
-
-            resourceId.contains("sing_normal", ignoreCase = true) ||
-                    resourceId.contains(
-                        "sing",
-                        ignoreCase = true
-                    ) -> CharacterAnimationType.SING_NORMAL
-
-            resourceId.contains(
-                "dancing_type_a",
-                ignoreCase = true
-            ) -> CharacterAnimationType.DANCING_TYPE_A
-
-            resourceId.contains(
-                "dancing_type_b",
-                ignoreCase = true
-            ) -> CharacterAnimationType.DANCING_TYPE_B
-
-            resourceId.contains(
-                "dancing_type_c",
-                ignoreCase = true
-            ) -> CharacterAnimationType.DANCING_TYPE_C
-
-            resourceId.contains(
-                "dancing",
-                ignoreCase = true
-            ) -> CharacterAnimationType.DANCING_TYPE_A
-
-            resourceId.contains("clap", ignoreCase = true) -> CharacterAnimationType.CLAP
-
-            else -> CharacterAnimationType.IDLE
+    private fun parseAnimationType(animation: String): CharacterAnimationType {
+        return when (animation.lowercase().replace("-", "_")) {
+            "idle" -> CharacterAnimationType.IDLE
+            "idle_annoyed" -> CharacterAnimationType.IDLE_ANNOYED
+            "speak_normal" -> CharacterAnimationType.SPEAK_NORMAL
+            "speak_angry" -> CharacterAnimationType.SPEAK_ANGRY
+            "listening" -> CharacterAnimationType.LISTENING
+            "walking" -> CharacterAnimationType.WALKING
+            "annoyed" -> CharacterAnimationType.ANNOYED
+            "clap" -> CharacterAnimationType.CLAP
+            "dancing_type_a" -> CharacterAnimationType.DANCING_TYPE_A
+            "dancing_type_b" -> CharacterAnimationType.DANCING_TYPE_B
+            "dancing_type_c" -> CharacterAnimationType.DANCING_TYPE_C
+            "sing_normal" -> CharacterAnimationType.SING_NORMAL
+            "sing_climax" -> CharacterAnimationType.SING_CLIMAX
+            "sing_pitchup" -> CharacterAnimationType.SING_PITCHUP
+            else -> {
+                Log.w("ScenarioConverter", "Unknown animation: $animation, defaulting to IDLE")
+                CharacterAnimationType.IDLE
+            }
         }
     }
 }

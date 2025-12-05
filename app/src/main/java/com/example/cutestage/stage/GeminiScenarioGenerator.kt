@@ -176,7 +176,7 @@ object GeminiScenarioGenerator {
         scenario.scenes.forEachIndexed { index, scene ->
             Log.d(
                 "GeminiScenarioGenerator",
-                "Scene ${index + 1}: name=${scene.name}, resource=${scene.resourceId}"
+                "Scene ${index + 1}: name=${scene.name}, gender=${scene.gender}, animation=${scene.animation}"
             )
         }
 
@@ -250,11 +250,11 @@ data class GeneratedScenario(
  */
 data class GeneratedScene(
     val order: Int,
-    @SerializedName("resource_id")
-    val resourceId: String,
     val name: String,
+    val gender: String,  // "male" or "female"
+    val animation: String,  // "walking", "idle", "speak_normal" 등
     val position: ScenePosition?,
-    val dialogue: String
+    val dialogue: String,
 )
 
 /**

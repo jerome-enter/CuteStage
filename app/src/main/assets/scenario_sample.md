@@ -5,52 +5,83 @@
 "scenes": [
 {
 "order": 1,
-"resource_id": "stage_female_1_walking",
 "name": "SuJin",
+"gender": "female",
+"animation": "walking",
 "position": { "x": 20, "z": 38 },
 "dialogue": "I'm going to practice my dance routine here."
 },
 {
-"order": 2,
-"resource_id": "stage_male_1_dancing_type_a",
+"order": 1,
 "name": "MinHo",
+"gender": "male",
+"animation": "idle",
+"position": { "x": 50, "z": 40 },
+"dialogue": ""
+},
+{
+"order": 2,
+"name": "SuJin",
+"gender": "female",
+"animation": "listening",
+"position": { "x": 20, "z": 38 },
+"dialogue": ""
+},
+{
+"order": 2,
+"name": "MinHo",
+"gender": "male",
+"animation": "dancing_type_a",
 "position": { "x": 50, "z": 40 },
 "dialogue": "Yeah! Look at my moves! One, two, three!"
 },
 {
 "order": 3,
-"resource_id": "stage_female_1_speak_angry",
 "name": "SuJin",
+"gender": "female",
+"animation": "speak_angry",
 "position": { "x": 20, "z": 38 },
 "dialogue": "Hey! Can you turn it down?"
 },
 {
-"order": 4,
-"resource_id": "stage_male_1_idle",
+"order": 3,
 "name": "MinHo",
+"gender": "male",
+"animation": "listening",
+"position": { "x": 50, "z": 40 },
+"dialogue": ""
+},
+{
+"order": 4,
+"name": "SuJin",
+"gender": "female",
+"animation": "listening",
+"position": { "x": 20, "z": 38 },
+"dialogue": ""
+},
+{
+"order": 4,
+"name": "MinHo",
+"gender": "male",
+"animation": "speak_normal",
 "position": { "x": 50, "z": 40 },
 "dialogue": "Oh, sorry! I didn't see you there."
 },
 {
 "order": 5,
-"resource_id": "stage_female_1_listening",
 "name": "SuJin",
+"gender": "female",
+"animation": "speak_normal",
 "position": { "x": 20, "z": 38 },
 "dialogue": "It's okay, but please be more considerate next time."
 },
 {
-"order": 6,
-"resource_id": "stage_female_1_speak_normal",
-"name": "JiHye",
-"position": { "x": 80, "z": 42 },
-"dialogue": "What's going on here?"
-},
-{
-"order": 7,
-"resource_id": "stage_male_1_speak_normal",
-"name": "TaeYang",
-"position": { "x": 70, "z": 40 },
-"dialogue": "Just a small misunderstanding!"
+"order": 5,
+"name": "MinHo",
+"gender": "male",
+"animation": "idle",
+"position": { "x": 50, "z": 40 },
+"dialogue": ""
 }
 ]
 }
