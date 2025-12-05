@@ -45,6 +45,7 @@ object StageTestScenario {
         OKSUN_MONOLOGUE,  // 옥순의 혼잣말
         I_AM_SOLO,        // 나는솔로 - 첫눈에 반한 소개팅
         FOOLISH_TRICK,    // 폭삭 속았수다 - 제1막 조기 밥상
+        SONG,             // 노래 - 하얀 바다새 (듀엣)
     }
 
     /**
@@ -56,6 +57,7 @@ object StageTestScenario {
      * - OKSUN_MONOLOGUE: 옥순의 혼잣말
      * - I_AM_SOLO: 나는솔로 - 첫눈에 반한 소개팅
      * - FOOLISH_TRICK: 폭삭 속았수다 - 제1막 조기 밥상
+     * - SONG: 노래 - 하얀 바다새 (듀엣)
      */
     var currentScenario: ScenarioType = ScenarioType.PLAYGROUND
 
@@ -83,6 +85,7 @@ object StageTestScenario {
      * - OKSUN_MONOLOGUE: 옥순의 혼잣말 (기본값)
      * - I_AM_SOLO: 나는솔로 - 첫눈에 반한 소개팅
      * - FOOLISH_TRICK: 폭삭 속았수다 - 제1막 조기 밥상
+     * - SONG: 노래 - 하얀 바다새 (듀엣)
      */
     fun createTestScript() = when (currentScenario) {
         ScenarioType.PLAYGROUND -> createPlaygroundScenario()
@@ -91,6 +94,7 @@ object StageTestScenario {
         ScenarioType.OKSUN_MONOLOGUE -> StageOksunMonologue.createMonologueScenario()
         ScenarioType.I_AM_SOLO -> createIAmSoloScenario()
         ScenarioType.FOOLISH_TRICK -> StageFoolishTrick.createFoolishTrickScenario()
+        ScenarioType.SONG -> StageSongScenario.createWhiteSeagullScenario()
     }
 
     /**

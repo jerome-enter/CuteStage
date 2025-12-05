@@ -311,13 +311,29 @@ object StageSongScenario {
                 backgroundRes = R.drawable.stage_floor,
                 durationMillis = totalDuration,
             ) { // 남자 캐릭터 (왼쪽)
+                // 노래 부를 때: 가운데 앞쪽으로 (y 증가, scale 증가)
+                // 안 부를 때: 뒤로 (y 감소, scale 감소)
+                val maleIsSinging = phrase.singer == CharacterGender.MALE
+                val malePosY = when {
+                    isInterlude || isHarmony -> 150.dp // 간주/하모니: 같은 위치
+                    maleIsSinging -> 165.dp // 노래 부를 때: 앞으로
+                    else -> 140.dp // 듣기: 뒤로
+                }
+                val maleScale = when {
+                    isInterlude || isHarmony -> 1f
+                    maleIsSinging -> 1.1f // 노래 부를 때: 강조
+                    else -> 0.95f // 듣기: 약간 작게
+                }
+
                 character(
                     id = "male",
                     imageRes = R.drawable.stage_ch_m_1,
                     name = "영수",
                     x = 80.dp,
-                    y = 150.dp,
+                    y = malePosY,
                     size = 100.dp,
+                    scale = maleScale,
+                    animationDuration = 600, // 부드럽게 이동
                     spriteAnimation = CharacterAnimationState(
                         gender = CharacterGender.MALE,
                         currentAnimation = when {
@@ -336,13 +352,28 @@ object StageSongScenario {
                         volume = 0.6f,
                     ),
                 ) // 여자 캐릭터 (오른쪽)
+                val femaleIsSinging = phrase.singer == CharacterGender.FEMALE
+                val femalePosY = when {
+                    isInterlude || isHarmony -> 150.dp // 간주/하모니: 같은 위치
+                    femaleIsSinging -> 165.dp // 노래 부를 때: 앞으로
+                    else -> 140.dp // 듣기: 뒤로
+                }
+                val femaleScale = when {
+                    isInterlude || isHarmony -> 1f
+                    femaleIsSinging -> 1.1f // 노래 부를 때: 강조
+                    else -> 0.95f // 듣기: 약간 작게
+                }
+
                 character(
                     id = "female",
                     imageRes = R.drawable.stage_ch_f_1,
                     name = "영숙",
                     x = 220.dp,
-                    y = 150.dp,
+                    y = femalePosY,
                     size = 100.dp,
+                    scale = femaleScale,
+                    flipX = true, // 왼쪽을 바라보도록 좌우 반전
+                    animationDuration = 600, // 부드럽게 이동
                     spriteAnimation = CharacterAnimationState(
                         gender = CharacterGender.FEMALE,
                         currentAnimation = when {
@@ -411,6 +442,7 @@ object StageSongScenario {
                 x = 220.dp,
                 y = 150.dp,
                 size = 100.dp,
+                flipX = true, // 왼쪽을 바라보도록 좌우 반전
                 spriteAnimation = CharacterAnimationState(
                     gender = CharacterGender.FEMALE,
                     currentAnimation = CharacterAnimationType.CLAP,
