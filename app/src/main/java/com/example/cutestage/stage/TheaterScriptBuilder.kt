@@ -89,6 +89,7 @@ class SceneBuilder(
         typingSpeedMs: Long = 50L,
         voice: CharacterVoice? = null,
         notes: List<SongNote>? = null, // 노래 음표 (노래일 때만)
+        choices: List<Choice>? = null, // 사용자 선택지 (분기할 때만)
     ) {
         dialogues.add(
             DialogueState(
@@ -99,6 +100,7 @@ class SceneBuilder(
                 typingSpeedMs = typingSpeedMs,
                 voice = voice,
                 notes = notes,
+                choices = choices,
             ),
         )
     }

@@ -84,7 +84,9 @@ fun StageView(
     var femaleClickCount by remember { mutableStateOf(0) }
     var lastClickTime by remember { mutableStateOf(0L) } // 화난 상태 카운트 (3번 화내면 리셋)
     var maleAngryCount by remember { mutableStateOf(0) }
-    var femaleAngryCount by remember { mutableStateOf(0) }
+    var femaleAngryCount by remember { mutableStateOf(0) } // 선택지 대기 상태
+    var waitingForChoice by remember { mutableStateOf(false) }
+    var pendingChoices by remember { mutableStateOf<List<Choice>?>(null) }
 
     Box(
         modifier = modifier
@@ -638,6 +640,23 @@ fun StageView(
                                 currentSceneIndex = 0
                                 isPlaying = true
                             },
+                        ) // 사랑고백 (인터랙티브)
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Spacer(modifier = Modifier.size(20.dp))
+                                    Text("💕 사랑고백 (선택형)")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                currentScript = StageLoveConfession.createLoveConfessionScenario()
+                                currentSceneIndex = 0
+                                isPlaying = true
+                            },
                         )
                     }
                 } // 재생 버튼 (작은 크기)
@@ -663,6 +682,52 @@ fun StageView(
                     }
                 }
             }
+        } // 선택지 버튼 UI (재생 중이고 선택 대기 중일 때)
+        if (isPlaying && waitingForChoice && pendingChoices != null) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White.copy(alpha = 0.95f),
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(20.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = "선택해주세요",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Black,
+                    )
+
+                    pendingChoices?.forEach { choice ->
+                        Surface(
+                            onClick = { // 선택한 씬으로 이동
+                                currentSceneIndex = choice.nextSceneIndex
+                                waitingForChoice = false
+                                pendingChoices = null
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(16.dp),
+                            ) {
+                                Text(
+                                    text = choice.text,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     } // 재생 시작 시 상호작용 대사 및 클릭 카운트 초기화
     LaunchedEffect(isPlaying) {
@@ -674,10 +739,26 @@ fun StageView(
             maleAngryCount = 0
             femaleAngryCount = 0
         }
-    }     // 스크립트 타임라인 진행
-    LaunchedEffect(currentScript, currentSceneIndex, isPlaying, playbackSpeed) {
+    } // 선택지 감지
+    LaunchedEffect(currentScene, isPlaying, playbackSpeed) {
+        val scene = currentScene // 로컬 변수로 저장 (스마트 캐스팅 위해)
+        if (isPlaying && scene != null) { // 현재 씬의 대화 중 선택지가 있는지 확인
+            val choicesDialogue = scene.dialogues.firstOrNull { it.choices != null }
+            if (choicesDialogue != null && choicesDialogue.choices != null) { // 선택지가 있으면 대기
+                delay(
+                    calculateSafeDelay(
+                        choicesDialogue.delayMillis + 2000,
+                        playbackSpeed
+                    )
+                ) // 대사 후 2초 대기
+                waitingForChoice = true
+                pendingChoices = choicesDialogue.choices
+            }
+        }
+    } // 스크립트 타임라인 진행
+    LaunchedEffect(currentScript, currentSceneIndex, isPlaying, playbackSpeed, waitingForChoice) {
         val script = currentScript // 로컬 변수에 저장하여 smart cast 가능하도록
-        if (isPlaying && script != null) {
+        if (isPlaying && script != null && !waitingForChoice) { // 선택지 대기 중이 아닐 때만 진행
             currentScene?.let { scene -> // 재생 속도에 따라 지연 시간 조정 (안전한 계산)
                 delay(calculateSafeDelay(scene.durationMillis, playbackSpeed))
                 if (currentSceneIndex < script.scenes.lastIndex) {
@@ -1172,6 +1253,7 @@ data class DialogueState(
     val typingSpeedMs: Long = 50L,
     val voice: CharacterVoice? = null, // 음성 설정 (null이면 기본값 사용)
     val notes: List<SongNote>? = null, // 노래 음표 정보 (노래일 때만)
+    val choices: List<Choice>? = null, // 사용자 선택지 (분기할 때만)
 )
 
 /**
@@ -1182,6 +1264,15 @@ data class SongNote(
     val lyric: String, // 글자
     val pitch: Float, // 음높이
     val duration: Int, // 지속 시간 (ms)
+)
+
+/**
+ * 선택지 (사용자 선택)
+ */
+@Immutable
+data class Choice(
+    val text: String, // 선택지 텍스트
+    val nextSceneIndex: Int, // 선택 시 이동할 씬 인덱스
 ) // ==================== 편의 확장 함수 ====================
 
 /**
