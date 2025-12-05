@@ -440,48 +440,180 @@ fun StageView(
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                         }
-                    } // 드롭다운 메뉴
+                    }                     // 드롭다운 메뉴
                     DropdownMenu(
                         expanded = showScenarioMenu,
                         onDismissRequest = { showScenarioMenu = false },
                     ) {
-                        DropdownMenuItem(text = { Text("폭삭 속았수다 🐟") }, onClick = {
-                            showScenarioMenu = false
-                            currentScript = StageFoolishTrick.createFoolishTrickScenario()
-                            currentSceneIndex = 0 // 씬 인덱스 명시적 리셋
-                            isPlaying = true
-                        })
-                        DropdownMenuItem(text = { Text("옥순의 혼잣말") }, onClick = {
-                            showScenarioMenu = false
-                            StageTestScenario.currentScenario =
-                                StageTestScenario.ScenarioType.OKSUN_MONOLOGUE
-                            currentScript = StageTestScenario.createTestScript()
-                            currentSceneIndex = 0 // 씬 인덱스 명시적 리셋
-                            isPlaying = true
-                        })
-                        DropdownMenuItem(text = { Text("부부싸움") }, onClick = {
-                            showScenarioMenu = false
-                            StageTestScenario.currentScenario =
-                                StageTestScenario.ScenarioType.COUPLE_FIGHT
-                            currentScript = StageTestScenario.createTestScript()
-                            currentSceneIndex = 0 // 씬 인덱스 명시적 리셋
-                            isPlaying = true
-                        })
-                        DropdownMenuItem(text = { Text("만남 (정적)") }, onClick = {
-                            showScenarioMenu = false
-                            StageTestScenario.currentScenario = StageTestScenario.ScenarioType.BASIC
-                            currentScript = StageTestScenario.createTestScript()
-                            currentSceneIndex = 0 // 씬 인덱스 명시적 리셋
-                            isPlaying = true
-                        })
-                        DropdownMenuItem(text = { Text("나는솔로 ♥") }, onClick = {
-                            showScenarioMenu = false
-                            StageTestScenario.currentScenario =
-                                StageTestScenario.ScenarioType.I_AM_SOLO
-                            currentScript = StageTestScenario.createTestScript()
-                            currentSceneIndex = 0 // 씬 인덱스 명시적 리셋
-                            isPlaying = true
-                        })
+                        val currentScenarioType =
+                            StageTestScenario.currentScenario // PLAYGROUND (대기실)
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (currentScenarioType == StageTestScenario.ScenarioType.PLAYGROUND) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Check,
+                                            contentDescription = "선택됨",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(20.dp))
+                                    }
+                                    Text("🏠 놀이터 (대기실)")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                StageTestScenario.currentScenario =
+                                    StageTestScenario.ScenarioType.PLAYGROUND
+                                currentScript = StageTestScenario.createTestScript()
+                                currentSceneIndex = 0 // 재생하지 않음 (대기실은 상호작용 모드)
+                            },
+                        ) // 폭삭 속았수다
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (currentScenarioType == StageTestScenario.ScenarioType.FOOLISH_TRICK) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Check,
+                                            contentDescription = "선택됨",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(20.dp))
+                                    }
+                                    Text("폭삭 속았수다 🐟")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                StageTestScenario.currentScenario =
+                                    StageTestScenario.ScenarioType.FOOLISH_TRICK
+                                currentScript = StageFoolishTrick.createFoolishTrickScenario()
+                                currentSceneIndex = 0
+                                isPlaying = true
+                            },
+                        ) // 옥순의 혼잣말
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (currentScenarioType == StageTestScenario.ScenarioType.OKSUN_MONOLOGUE) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Check,
+                                            contentDescription = "선택됨",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(20.dp))
+                                    }
+                                    Text("옥순의 혼잣말")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                StageTestScenario.currentScenario =
+                                    StageTestScenario.ScenarioType.OKSUN_MONOLOGUE
+                                currentScript = StageTestScenario.createTestScript()
+                                currentSceneIndex = 0
+                                isPlaying = true
+                            },
+                        ) // 부부싸움
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (currentScenarioType == StageTestScenario.ScenarioType.COUPLE_FIGHT) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Check,
+                                            contentDescription = "선택됨",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(20.dp))
+                                    }
+                                    Text("부부싸움")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                StageTestScenario.currentScenario =
+                                    StageTestScenario.ScenarioType.COUPLE_FIGHT
+                                currentScript = StageTestScenario.createTestScript()
+                                currentSceneIndex = 0
+                                isPlaying = true
+                            },
+                        ) // 만남 (정적)
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (currentScenarioType == StageTestScenario.ScenarioType.BASIC) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Check,
+                                            contentDescription = "선택됨",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(20.dp))
+                                    }
+                                    Text("만남 (정적)")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                StageTestScenario.currentScenario =
+                                    StageTestScenario.ScenarioType.BASIC
+                                currentScript = StageTestScenario.createTestScript()
+                                currentSceneIndex = 0
+                                isPlaying = true
+                            },
+                        ) // 나는솔로
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (currentScenarioType == StageTestScenario.ScenarioType.I_AM_SOLO) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Check,
+                                            contentDescription = "선택됨",
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(20.dp))
+                                    }
+                                    Text("나는솔로 ♥")
+                                }
+                            },
+                            onClick = {
+                                showScenarioMenu = false
+                                StageTestScenario.currentScenario =
+                                    StageTestScenario.ScenarioType.I_AM_SOLO
+                                currentScript = StageTestScenario.createTestScript()
+                                currentSceneIndex = 0
+                                isPlaying = true
+                            },
+                        )
                     }
                 } // 재생 버튼 (작은 크기)
                 Surface(
