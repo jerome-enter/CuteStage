@@ -25,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -87,8 +88,9 @@ fun StageView(
 
     Box(
         modifier = modifier
+                .padding(10.dp) // StageView 상하좌우 10dp 여백
                 .fillMaxWidth()
-                .height(300.dp),
+                .height(300.dp).clip(RoundedCornerShape(16.dp)), // 네 모서리 16dp 라운드
     ) {
         // 무대 배경 ( 씬 변경 시 recomposition 보장)
         key(currentSceneIndex) {
@@ -860,7 +862,9 @@ private fun AnimatedSpeechBubble(
         modifier = modifier,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                    .fillMaxSize()
+                    .padding(5.dp), // 대화창이 StageView 경계에서 5dp 떨어지도록
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -978,7 +982,11 @@ private fun InteractionSpeechBubble(
         ),
         modifier = modifier,
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                    .fillMaxSize()
+                    .padding(5.dp), // 대화창이 StageView 경계에서 5dp 떨어지도록
+        ) {
             // 캐릭터 위치에 맞춰 말풍선 표시 (연극할 때와 같은 위치)
             Surface(
                 shape = RoundedCornerShape(16.dp),
