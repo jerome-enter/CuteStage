@@ -22,6 +22,11 @@ import com.example.cutestage.R
  * - SING_NORMAL, SING_CLIMAX, SING_PITCHUP (감정 표현으로 활용)
  */
 object StageLoveConfession {
+    // 음성 설정
+    private val maleVoice = CharacterVoice(pitch = 0.9f, speed = 80, duration = 60, enabled = true)
+    private val femaleVoice =
+        CharacterVoice(pitch = 1.8f, speed = 70, duration = 45, enabled = true)
+
     /**
      * 사랑고백 전체 시나리오
      *
@@ -51,7 +56,7 @@ object StageLoveConfession {
                     currentAnimation = CharacterAnimationType.WALKING,
                     isAnimating = true,
                 ),
-                voice = CharacterVoice(pitch = 0.9f, speed = 80, duration = 60),
+                voice = maleVoice,
             ) // 여자 (오른쪽에서 걸어옴)
             character(
                 id = "female",
@@ -67,7 +72,7 @@ object StageLoveConfession {
                     currentAnimation = CharacterAnimationType.WALKING,
                     isAnimating = true,
                 ),
-                voice = CharacterVoice(pitch = 1.8f, speed = 70, duration = 45),
+                voice = femaleVoice,
             )
         } // 씬 1: 등장 - 서로 마주보는 위치로 이동
         scene(
@@ -144,6 +149,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "준호",
                 delayMillis = 500L,
+                voice = maleVoice,
             )
         } // 씬 3: 일상 대화 2 (도도한 반응)
         scene(
@@ -185,6 +191,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "서연",
                 delayMillis = 500L,
+                voice = femaleVoice,
             )
         } // === 고백 준비 (씬 4-5) ===
         // 씬 4: 망설임
@@ -228,6 +235,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "준호",
                 delayMillis = 500L,
+                voice = maleVoice,
             )
         } // 씬 5: 진지한 분위기
         scene(
@@ -269,6 +277,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "서연",
                 delayMillis = 500L,
+                voice = femaleVoice,
             )
         } // === 고백! (씬 6-7) ===
         // 씬 6: 앞으로 나오며 고백 준비
@@ -346,6 +355,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "준호",
                 delayMillis = 500L,
+                voice = maleVoice,
             )
         } // === 선택지 (씬 8) ===
         scene(
@@ -390,6 +400,12 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = null,
                 delayMillis = 1000L,
+                voice = CharacterVoice(
+                    pitch = 1.2f,
+                    speed = 60,
+                    duration = 50,
+                    enabled = true
+                ), // 내레이션 음성
                 choices = listOf(
                     Choice(text = "사귄다 ♥", nextSceneIndex = 9), // 해피 엔딩
                     Choice(text = "거절한다", nextSceneIndex = 15), // 새드 엔딩
@@ -438,6 +454,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "서연",
                 delayMillis = 1000L,
+                voice = femaleVoice,
             )
         } // 씬 10: 기쁨 폭발!
         scene(
@@ -482,6 +499,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "준호",
                 delayMillis = 500L,
+                voice = maleVoice,
             )
         } // 씬 11: 함께 기뻐하기
         scene(
@@ -560,6 +578,12 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = null,
                 delayMillis = 500L,
+                voice = CharacterVoice(
+                    pitch = 1.2f,
+                    speed = 60,
+                    duration = 50,
+                    enabled = true
+                ), // 내레이션
             )
         } // 씬 13: 춤 타입 B
         scene(
@@ -638,6 +662,12 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = null,
                 delayMillis = 500L,
+                voice = CharacterVoice(
+                    pitch = 1.2f,
+                    speed = 60,
+                    duration = 50,
+                    enabled = true
+                ), // 내레이션
             )
         } // === 새드 엔딩: 거절한다 (씬 15-20) ===
         // 씬 15: 거절
@@ -681,6 +711,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "서연",
                 delayMillis = 1000L,
+                voice = femaleVoice,
             )
         } // 씬 16: 충격
         scene(
@@ -724,6 +755,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "준호",
                 delayMillis = 1000L,
+                voice = maleVoice,
             )
         } // 씬 17: 서연 떠남
         scene(
@@ -766,6 +798,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "서연",
                 delayMillis = 500L,
+                voice = femaleVoice,
             )
         } // 씬 18: 서연 퇴장 (걸어서)
         scene(
@@ -828,6 +861,7 @@ object StageLoveConfession {
                 y = 60.dp,
                 speakerName = "준호",
                 delayMillis = 1000L,
+                voice = maleVoice,
             )
         } // 씬 20: 새드 엔딩
         scene(
@@ -850,11 +884,17 @@ object StageLoveConfession {
             )
 
             dialogue(
-                text = "새드 엔딩...",
+                text = "새드 ��딩...",
                 x = 130.dp,
                 y = 60.dp,
                 speakerName = null,
                 delayMillis = 1000L,
+                voice = CharacterVoice(
+                    pitch = 1.2f,
+                    speed = 60,
+                    duration = 50,
+                    enabled = true
+                ), // 내레이션
             )
         }
     }
