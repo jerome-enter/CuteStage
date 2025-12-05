@@ -953,15 +953,18 @@ private fun AnimatedSpeechBubble(
         Box(
             modifier = Modifier
                     .fillMaxSize()
-                    .padding(5.dp), // 대화창이 StageView 경계에서 5dp 떨어지도록
+                    .padding(10.dp), // 대화창이 StageView 경계에서 10dp 떨어지도록
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color.White, // 대화창 배경 흰색
                 shadowElevation = 4.dp,
                 modifier = Modifier
-                        .offset(x = dialogue.position.x, y = dialogue.position.y)
-                        .widthIn(max = 200.dp),
+                        .offset(
+                            x = dialogue.position.x.coerceIn(0.dp, 280.dp - 180.dp),
+                            y = dialogue.position.y.coerceIn(0.dp, 280.dp - 100.dp)
+                        )
+                        .widthIn(max = 180.dp),
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),
@@ -1075,19 +1078,20 @@ private fun InteractionSpeechBubble(
         Box(
             modifier = Modifier
                     .fillMaxSize()
-                    .padding(5.dp), // 대화창이 StageView 경계에서 5dp 떨어지도록
-        ) {
-            // 캐릭터 위치에 맞춰 말풍선 표시 (연극할 때와 같은 위치)
+                    .padding(10.dp), // 대화창이 StageView 경계에서 10dp 떨어지도록
+        ) { // 캐릭터 위치에 맞춰 말풍선 표시 (연극할 때와 같은 위치)
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color.White,
                 shadowElevation = 4.dp,
                 modifier = Modifier
                         .offset(
-                            x = character.position.x + character.size / 2 - 100.dp,
+                            x = (character.position.x + character.size / 2 - 90.dp).coerceIn(
+                                0.dp, 280.dp - 180.dp
+                            ),
                             y = 60.dp, // 연극할 때와 같은 높이
                         )
-                        .widthIn(max = 200.dp)
+                        .widthIn(max = 180.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,

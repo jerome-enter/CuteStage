@@ -884,7 +884,7 @@ object StageLoveConfession {
             )
 
             dialogue(
-                text = "새드 ��딩...",
+                text = "새드 엔딩...",
                 x = 130.dp,
                 y = 60.dp,
                 speakerName = null,
