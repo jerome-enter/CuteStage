@@ -98,12 +98,11 @@ object StageTestScenario {
      * 대화 없이 캐릭터들을 무대에 배치하여 사용자가 자유롭게 상호작용할 수 있도록 함
      */
     private fun createPlaygroundScenario() = theaterScript {
-        debug(true) // 씬 1: 캐릭터들 무대에 배치 (무한 대기 - 사용자 상호작용)
+        debug(true) // 씬 1: 캐릭터들 무대에 배치
         scene(
             backgroundRes = R.drawable.stage_floor,
-            durationMillis = Long.MAX_VALUE,
-        ) {
-            // 남자 캐릭터 (왼쪽)
+            durationMillis = Long.MAX_VALUE, // 무한 대기 (사용자 상호작용 대기)
+        ) { // 남자 캐릭터 (왼쪽)
             character(
                 id = "male",
                 imageRes = R.drawable.stage_ch_m_1,
@@ -119,9 +118,7 @@ object StageTestScenario {
                     frameDuration = 500,
                 ),
                 voice = sangchulVoice,
-            )
-
-            // 여자 캐릭터 (오른쪽)
+            ) // 여자 캐릭터 (오른쪽)
             character(
                 id = "female",
                 imageRes = R.drawable.stage_ch_f_1,

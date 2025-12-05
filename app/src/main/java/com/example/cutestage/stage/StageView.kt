@@ -87,8 +87,8 @@ fun StageView(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(300.dp),
+                .fillMaxWidth()
+                .height(300.dp),
     ) {
         // 무대 배경 ( 씬 변경 시 recomposition 보장)
         key(currentSceneIndex) {
@@ -229,20 +229,21 @@ fun StageView(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-        } // 재생 중일 때 종료 버튼 표시 (오른쪽 하단)
+        }         // 재생 중일 때 종료 버튼 표시 (오른쪽 하단)
         if (isPlaying) {
             Surface(
                 onClick = {
-                    isPlaying = false
-                    currentScript = null
+                    isPlaying = false // PLAYGROUND 시나리오로 복귀
+                    StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
+                    currentScript = StageTestScenario.createTestScript()
                     currentSceneIndex = 0
                 },
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.errorContainer,
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 12.dp, end = 12.dp)
-                    .size(32.dp),
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 12.dp, end = 12.dp)
+                        .size(32.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -259,8 +260,8 @@ fun StageView(
             shape = RoundedCornerShape(12.dp),
             color = Color.Black.copy(alpha = 0.6f),
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(8.dp),
+                    .align(Alignment.TopStart)
+                    .padding(8.dp),
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -317,8 +318,8 @@ fun StageView(
                 Text(
                     text = "Scene: ${currentSceneIndex + 1}/${theScript.scenes.size}",
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp),
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White,
                 )
@@ -329,8 +330,8 @@ fun StageView(
             var showVoiceEngineMenu by remember { mutableStateOf(false) } // 음성 엔진 선택 버튼 (왼쪽 하단)
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(bottom = 12.dp, start = 12.dp),
+                        .align(Alignment.BottomStart)
+                        .padding(bottom = 12.dp, start = 12.dp),
             ) {
                 Surface(
                     onClick = { showVoiceEngineMenu = true },
@@ -419,8 +420,8 @@ fun StageView(
             } // 버튼들을 가로로 배치
             Row(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 12.dp, end = 12.dp),
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 12.dp, end = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 // 시나리오 선택 버튼 (작은 크기)
@@ -516,18 +517,20 @@ fun StageView(
             maleAngryCount = 0
             femaleAngryCount = 0
         }
-    } // 스크립트 타임라인 진행
+    }     // 스크립트 타임라인 진행
     LaunchedEffect(currentScript, currentSceneIndex, isPlaying, playbackSpeed) {
         val script = currentScript // 로컬 변수에 저장하여 smart cast 가능하도록
         if (isPlaying && script != null) {
-            currentScene?.let { scene ->
-                // 재생 속도에 따라 지연 시간 조정 (안전한 계산)
+            currentScene?.let { scene -> // 재생 속도에 따라 지연 시간 조정 (안전한 계산)
                 delay(calculateSafeDelay(scene.durationMillis, playbackSpeed))
                 if (currentSceneIndex < script.scenes.lastIndex) {
                     currentSceneIndex++
                 } else {
                     isPlaying = false
-                    onScriptEnd()
+                    onScriptEnd() // 시나리오 종료 후 PLAYGROUND로 복귀
+                    StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
+                    currentScript = StageTestScenario.createTestScript()
+                    currentSceneIndex = 0
                 }
             }
         }
@@ -647,26 +650,26 @@ private fun AnimatedCharacter(
             painter = painterResource(displayImageRes),
             contentDescription = character.name,
             modifier = Modifier
-                .size(character.size)
-                .offset(x = offsetX, y = offsetY)
-                .graphicsLayer {
-                    scaleX = scale * if (character.flipX) -1f else 1f
-                    scaleY = scale
-                    this.alpha = alpha
-                    rotationZ = character.rotation
-                }
-                .then(
-                    if (isInteractive) {
-                        Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) {
-                            onCharacterClick(character)
-                        }
-                    } else {
-                        Modifier
-                    },
-                ),
+                    .size(character.size)
+                    .offset(x = offsetX, y = offsetY)
+                    .graphicsLayer {
+                        scaleX = scale * if (character.flipX) -1f else 1f
+                        scaleY = scale
+                        this.alpha = alpha
+                        rotationZ = character.rotation
+                    }
+                    .then(
+                        if (isInteractive) {
+                            Modifier.clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) {
+                                onCharacterClick(character)
+                            }
+                        } else {
+                            Modifier
+                        },
+                    ),
         )
     }
 }
@@ -715,8 +718,8 @@ private fun AnimatedSpeechBubble(
                 color = Color.White,
                 shadowElevation = 4.dp,
                 modifier = Modifier
-                    .offset(x = dialogue.position.x, y = dialogue.position.y)
-                    .widthIn(max = 200.dp),
+                        .offset(x = dialogue.position.x, y = dialogue.position.y)
+                        .widthIn(max = 200.dp),
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),
@@ -833,19 +836,18 @@ private fun InteractionSpeechBubble(
                 color = Color.White,
                 shadowElevation = 4.dp,
                 modifier = Modifier
-                    .offset(
-                        x = character.position.x + character.size / 2 - 100.dp,
-                        y = 60.dp, // 연극할 때와 같은 높이
-                    )
-                    .widthIn(max = 200.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                    ) {
-                        // 클릭하면 즉시 닫기
-                        isDismissing = true
-                        onDismiss()
-                    },
+                        .offset(
+                            x = character.position.x + character.size / 2 - 100.dp,
+                            y = 60.dp, // 연극할 때와 같은 높이
+                        )
+                        .widthIn(max = 200.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { // 클릭하면 즉시 닫기
+                            isDismissing = true
+                            onDismiss()
+                        },
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),

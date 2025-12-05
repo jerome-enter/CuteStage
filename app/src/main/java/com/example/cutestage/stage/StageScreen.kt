@@ -34,15 +34,15 @@ fun StageScreen() {
         LazyColumn(
             state = listState,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+                    .fillMaxSize()
+                    .padding(paddingValues),
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             // Stage View
             item {
                 StageView(
-                    script = null, // 빈 무대로 시작
+                    script = StageTestScenario.createTestScript(), // PLAYGROUND 시나리오 자동 로드
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -82,8 +82,8 @@ private fun StageTopBar() {
 private fun StageFooter() {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 32.dp),
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Divider(
