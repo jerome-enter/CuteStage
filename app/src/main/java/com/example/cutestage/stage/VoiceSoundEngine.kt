@@ -285,8 +285,10 @@ object VoiceSoundManagerFactory {
      * ```
      * VoiceSoundManagerFactory.currentEngineType = VoiceSoundType.TONE_GENERATOR
      * ```
+     *
+     * 기본값: 동물의 숲 스타일 🎮
      */
-    var currentEngineType: VoiceSoundType = VoiceSoundType.AUDIO_TRACK
+    var currentEngineType: VoiceSoundType = VoiceSoundType.ANIMAL_VOICE
 
     /**
      * 선택된 엔진 타입에 맞는 매니저 생성
