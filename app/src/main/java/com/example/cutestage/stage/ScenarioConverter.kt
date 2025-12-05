@@ -160,7 +160,8 @@ object ScenarioConverter {
             currentAnimation = animationType,
             isAnimating = true,
             frameDuration = 500
-        )
+        ) // 오른쪽 캐릭터는 왼쪽을 보도록 flip
+        val shouldFlip = xPosition > 125f  // 화면 중앙(125dp) 기준으로 오른쪽이면 flip
 
         return CharacterState(
             id = "$name-$gender-$animation",
@@ -171,7 +172,7 @@ object ScenarioConverter {
             alpha = 1f,
             scale = 1f,
             rotation = 0f,
-            flipX = false,
+            flipX = shouldFlip,  // 오른쪽 캐릭터는 왼쪽을 향함
             animationDuration = 500,
             spriteAnimation = spriteAnimation  // ✅ 올바른 애니메이션 시스템 활용!
         )

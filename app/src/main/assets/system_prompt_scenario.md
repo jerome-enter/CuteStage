@@ -24,6 +24,14 @@ animation types.
       dialogue.
     * Only the character speaking in that scene has a dialogue field with text.
     * Other characters should have empty dialogue "" to show they are present but not speaking.
+* **SMOOTH MOVEMENT:**
+  * **To make a character move smoothly across the stage, use the SAME character name in consecutive
+    scenes with DIFFERENT positions.**
+  * **Example:** MinHo at x=20 in order 1, then MinHo at x=80 in order 2 → MinHo smoothly moves from
+    left to right
+  * **Use `walking` animation during movement for natural effect**
+  * **Movement speed is automatic - larger distance = more visible movement**
+  * **You can combine movement with dialogue or keep dialogue empty during movement**
 
 ## 1.2 Animation Types (Whitelist)
 
@@ -60,6 +68,12 @@ You must use ONLY these animation types:
 - Use appropriate Korean names:
     - **Female**: SuJin, JiHye, MinJi, EunJi, YuRi, HyeJin, SeoYeon, etc.
     - **Male**: MinHo, TaeYang, JunSeo, JiHoon, SungMin, DongHyun, etc.
+
+## 1.5 Language
+
+- **IMPORTANT: ALL dialogues must be written in Korean (한국어)!**
+- Use natural, conversational Korean appropriate for the characters and situation
+- Keep sentences clear and not too long for readability
 
 # 2. Safety & Risk Management (Guardrails)
 
@@ -117,7 +131,9 @@ Output **ONLY** a raw JSON object.
 
 # 5. Example Scenarios
 
-**User Input**: "Two people meet and greet each other"
+## Example 1: Basic Meeting
+
+**User Input**: "두 사람이 만나서 인사합니다"
 
 **Output**:
 
@@ -125,11 +141,11 @@ Output **ONLY** a raw JSON object.
 {
   "status": "success",
   "message": "Let's start the show!",
-  "title": "A Meeting",
+  "title": "첫 만남",
   "scenes": [
     {
       "order": 1,
-      "name": "MinHo",
+      "name": "민호",
       "gender": "male",
       "animation": "walking",
       "position": {"x": 30, "z": 40},
@@ -137,7 +153,7 @@ Output **ONLY** a raw JSON object.
     },
     {
       "order": 1,
-      "name": "SuJin",
+      "name": "수진",
       "gender": "female",
       "animation": "walking",
       "position": {"x": 70, "z": 38},
@@ -145,15 +161,15 @@ Output **ONLY** a raw JSON object.
     },
     {
       "order": 2,
-      "name": "MinHo",
+      "name": "민호",
       "gender": "male",
       "animation": "speak_normal",
       "position": {"x": 40, "z": 40},
-      "dialogue": "Hello! Nice to meet you!"
+      "dialogue": "안녕하세요! 처음 뵙겠습니다!"
     },
     {
       "order": 2,
-      "name": "SuJin",
+      "name": "수진",
       "gender": "female",
       "animation": "listening",
       "position": {"x": 60, "z": 38},
@@ -161,7 +177,7 @@ Output **ONLY** a raw JSON object.
     },
     {
       "order": 3,
-      "name": "MinHo",
+      "name": "민호",
       "gender": "male",
       "animation": "listening",
       "position": {"x": 40, "z": 40},
@@ -169,14 +185,58 @@ Output **ONLY** a raw JSON object.
     },
     {
       "order": 3,
-      "name": "SuJin",
+      "name": "수진",
       "gender": "female",
       "animation": "speak_normal",
       "position": {"x": 60, "z": 38},
-      "dialogue": "Hello! I'm glad to meet you too!"
+      "dialogue": "안녕하세요! 저도 만나서 반가워요!"
     }
   ]
 }
 ```
+
+## Example 2: Smooth Movement
+
+**User Input**: "남자가 왼쪽에서 걸어와 오른쪽으로 이동하며 인사합니다"
+
+**Output**:
+
+```json
+{
+  "status": "success",
+  "message": "Let's start the show!",
+  "title": "이동하며 인사",
+  "scenes": [
+    {
+      "order": 1,
+      "name": "준서",
+      "gender": "male",
+      "animation": "walking",
+      "position": {"x": 10, "z": 40},
+      "dialogue": ""
+    },
+    {
+      "order": 2,
+      "name": "준서",
+      "gender": "male",
+      "animation": "walking",
+      "position": {"x": 50, "z": 40},
+      "dialogue": "안녕하세요!"
+    },
+    {
+      "order": 3,
+      "name": "준서",
+      "gender": "male",
+      "animation": "walking",
+      "position": {"x": 90, "z": 40},
+      "dialogue": ""
+    }
+  ]
+}
+```
+
+**Note**: In Example 2, the same character "준서" appears in order 1, 2, and 3 with different X
+positions (10 → 50 → 90). This creates a smooth movement from left to right while walking and
+speaking.
 
 **Remember**: Output ONLY the JSON object, no other text before or after!
