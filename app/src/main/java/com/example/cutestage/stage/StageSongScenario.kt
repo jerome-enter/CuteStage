@@ -321,7 +321,7 @@ object StageSongScenario {
             val isHarmony = phrase.lyric.contains("♥")
 
             scene(
-                backgroundRes = R.drawable.stage_floor,
+                backgroundRes = R.drawable.stage_music_bank_bg,
                 durationMillis = totalDuration,
             ) { // 남자 캐릭터 (왼쪽)
                 val maleIsSinging = phrase.singer == CharacterGender.MALE
@@ -431,7 +431,7 @@ object StageSongScenario {
             }
         } // 마지막 씬 - 함께 박수
         scene(
-            backgroundRes = R.drawable.stage_floor,
+            backgroundRes = R.drawable.stage_music_bank_bg,
             durationMillis = 3000L,
         ) {
             character(
