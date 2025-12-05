@@ -45,51 +45,68 @@ object StageSongScenario {
         val lyric: String,
         val singer: CharacterGender, // 누가 부를지
         val animation: CharacterAnimationType = CharacterAnimationType.SING_NORMAL,
+        val accompaniment: List<Note> = emptyList(), // 반주 (백그라운드, 옵션)
     )
 
     /**
-     * 하얀 바다새 - 1절
+     * 하얀 바다새 - 1절 (악보 기준 음길이 적용)
      */
     private fun verse1(): List<Phrase> = listOf( // 어두운 바닷가 홀로 나는 새야
         Phrase(
             notes = listOf(
-                Note(NoteFrequency.B, 400),      // 시
-                Note(NoteFrequency.B, 400),      // 시
-                Note(NoteFrequency.Cs, 400),     // 도#
-                Note(NoteFrequency.D, 400),      // 레
-                Note(NoteFrequency.E, 600),      // 미
-                Note(NoteFrequency.D, 400),      // 레
-                Note(NoteFrequency.Cs, 400),     // 도#
-                Note(NoteFrequency.B, 400),      // 시
-                Note(NoteFrequency.Fs, 400),     // 파#
-                Note(NoteFrequency.B, 800),      // 시
+                Note(NoteFrequency.B, 250),      // 어 (8분음표)
+                Note(NoteFrequency.B, 250),      // 두 
+                Note(NoteFrequency.Cs, 250),     // 운
+                Note(NoteFrequency.D, 500),      // 바 (4분음표)
+                Note(NoteFrequency.E, 250),      // 닷
+                Note(NoteFrequency.D, 250),      // 가
+                Note(NoteFrequency.Cs, 250),     // 홀
+                Note(NoteFrequency.B, 500),      // 로 (4분음표)
+                Note(NoteFrequency.Fs, 250),     // 나
+                Note(NoteFrequency.B, 1000),     // 는 (2분음표)
+                Note(NoteFrequency.A, 500),      // 새 (4분음표)
+                Note(NoteFrequency.B, 750),      // 야- (부점 4분음표)
             ),
             lyric = "어두운 바닷가 홀로 나는 새야",
             singer = CharacterGender.MALE,
-            animation = CharacterAnimationType.SING_NORMAL
+            animation = CharacterAnimationType.SING_NORMAL,
+            accompaniment = listOf(
+                // Bm 코드 아르페지오 (낮은음)
+                Note(NoteFrequency.B * 0.5f, 500),
+                Note(NoteFrequency.D * 0.5f, 500),
+                Note(NoteFrequency.Fs * 0.5f, 500),
+                Note(NoteFrequency.A * 0.5f, 1000),
+            )
         ), // 갈 곳을 잃었나 하얀 바다새야
         Phrase(
             notes = listOf(
-                Note(NoteFrequency.A, 400),      // 라
-                Note(NoteFrequency.A, 400),      // 라
-                Note(NoteFrequency.B, 400),      // 시
-                Note(NoteFrequency.Cs, 400),     // 도#
-                Note(NoteFrequency.D, 600),      // 레
-                Note(NoteFrequency.Cs, 400),     // 도#
-                Note(NoteFrequency.B, 400),      // 시
-                Note(NoteFrequency.A, 400),      // 라
-                Note(NoteFrequency.Fs, 400),     // 파#
-                Note(0f, 200),                   // 쉼표
-                Note(NoteFrequency.Fs, 400),     // 파#
-                Note(NoteFrequency.Fs, 400),     // 파#
-                Note(NoteFrequency.E, 400),      // 미
-                Note(NoteFrequency.D, 400),      // 레
-                Note(NoteFrequency.Cs, 400),     // 도#
-                Note(NoteFrequency.B, 800),      // 시
+                Note(NoteFrequency.A, 250),      // 갈
+                Note(NoteFrequency.A, 250),      // 곳
+                Note(NoteFrequency.B, 250),      // 을
+                Note(NoteFrequency.Cs, 500),     // 잃 (4분음표)
+                Note(NoteFrequency.D, 250),      // 었
+                Note(NoteFrequency.Cs, 250),     // 나
+                Note(NoteFrequency.B, 250),      // 하
+                Note(NoteFrequency.A, 500),      // 얀 (4분음표)
+                Note(NoteFrequency.Fs, 250),     // 바
+                Note(0f, 100),                   // 쉼표
+                Note(NoteFrequency.Fs, 250),     // 다
+                Note(NoteFrequency.Fs, 250),     // 새
+                Note(NoteFrequency.E, 250),      // 야
+                Note(NoteFrequency.D, 500),      // -
+                Note(NoteFrequency.Cs, 250),     // -
+                Note(NoteFrequency.B, 1000),     // - (길게)
             ),
             lyric = "갈 곳을 잃었나 하얀 바다새야",
             singer = CharacterGender.FEMALE,
-            animation = CharacterAnimationType.SING_NORMAL
+            animation = CharacterAnimationType.SING_NORMAL,
+            accompaniment = listOf(
+                // A 코드 아르페지오
+                Note(NoteFrequency.A * 0.5f, 500),
+                Note(NoteFrequency.Cs * 0.5f, 500),
+                Note(NoteFrequency.E * 0.5f, 500),
+                Note(NoteFrequency.A * 0.5f, 1000),
+            )
         )
     )
 
