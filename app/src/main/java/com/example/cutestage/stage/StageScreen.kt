@@ -115,7 +115,8 @@ private fun extractCharactersFromScript(script: TheaterScript): List<CharacterIn
     script.scenes.forEach { scene ->
         scene.characters.forEach { character ->
             if (!characterMap.containsKey(character.id)) {
-                val description = when (character.name) {
+                // description이 있으면 사용, 없으면 fallback
+                val description = character.description ?: when (character.name) {
                     "상철", "영수" -> "무뚝뚝하지만 따뜻한 마음을 가진 남자"
                     "옥순", "영숙" -> "밝고 긍정적인 에너지를 가진 여자"
                     else -> "연극의 주인공"

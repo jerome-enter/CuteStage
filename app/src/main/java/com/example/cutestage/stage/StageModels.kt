@@ -49,6 +49,7 @@ data class CharacterState(
     val easing: Easing = FastOutSlowInEasing,
     val voice: CharacterVoice = CharacterVoice(),
     val spriteAnimation: CharacterAnimationState? = null,
+    val description: String? = null,  // 캐릭터 설명 (등장인물 소개용)
 )
 
 /**

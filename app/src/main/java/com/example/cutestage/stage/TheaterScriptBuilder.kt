@@ -62,6 +62,7 @@ class SceneBuilder(
         easing: Easing = FastOutSlowInEasing,
         voice: CharacterVoice = CharacterVoice(),
         spriteAnimation: CharacterAnimationState? = null,
+        description: String? = null,  // 캐릭터 설명
     ) {
         characters.add(
             CharacterState(
@@ -78,6 +79,7 @@ class SceneBuilder(
                 easing = easing,
                 voice = voice,
                 spriteAnimation = spriteAnimation,
+                description = description,
             ),
         )
     }

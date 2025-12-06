@@ -123,6 +123,7 @@ object StageTestScenario {
                     frameDuration = 500,
                 ),
                 voice = sangchulVoice,
+                description = "무뚝뚝하지만 따뜻한 마음을 가진 남자",
             )
 
             // 여자 캐릭터 (오른쪽)
@@ -142,6 +143,7 @@ object StageTestScenario {
                     frameDuration = 500,
                 ),
                 voice = oksunVoice,
+                description = "밝고 긍정적인 에너지를 가진 여자",
             )
         }
     }
@@ -637,6 +639,7 @@ object StageTestScenario {
                     frameDuration = 600,
                 ),
                 voice = sangchulVoice,
+                description = "진지하지만 로맨틱한 감성을 가진 남자",
             )
 
             dialogue(
@@ -716,6 +719,7 @@ object StageTestScenario {
                 ),
                 animationDuration = 1500,
                 voice = oksunVoice,
+                description = "밝고 사랑스러운 매력을 가진 여자",
             )
         } // 씬 4: 여자 등장 완료 - 첫눈에 반함!
         scene(
