@@ -91,7 +91,8 @@ object StageFoolishTrick {
                 x = 245.dp,
                 y = 170.dp,
                 size = 90.dp,
-                voice = uncleVoice
+                voice = uncleVoice,
+                description = "이기적이고 냉정한 애순의 삼촌"
             )
 
             // 할머니 - 평상 옆
@@ -102,7 +103,8 @@ object StageFoolishTrick {
                 x = 195.dp,
                 y = 175.dp,
                 size = 85.dp,
-                voice = grandmaVoice
+                voice = grandmaVoice,
+                description = "애순의 친할머니, 나이 들어 힘없는 노인"
             )
 
             // 애순 - 수돗가에서 설거지
@@ -113,7 +115,8 @@ object StageFoolishTrick {
                 x = 50.dp,
                 y = 180.dp,
                 size = 80.dp,
-                voice = aesunVoice
+                voice = aesunVoice,
+                description = "조숙하고 똑똑한 10대 소녀, 엄마를 그리워함"
             )
 
             dialogue(
@@ -170,7 +173,8 @@ object StageFoolishTrick {
                 size = 95.dp,
                 scale = 1.1f,
                 flipX = true,  // 오른쪽을 향하도록
-                voice = gwangryeVoice
+                voice = gwangryeVoice,
+                description = "애순의 엄마, 억척스러운 제주 해녀로 딸을 사랑하는 강한 어머니"
             )
 
             // 조기 소품 - 엄마와 함께 왼쪽에서 시작
