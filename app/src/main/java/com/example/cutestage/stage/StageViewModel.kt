@@ -20,11 +20,20 @@ class StageViewModel @Inject constructor(
     private val scenarioRepository: ScenarioRepository
 ) : ViewModel() {
 
-    var state by mutableStateOf(StageState())
+    var state by mutableStateOf(
+        StageState(
+            currentScript = StageTestScenario.createTestScript() // PLAYGROUND로 초기화
+        )
+    )
         private set
 
     // onScriptEnd 콜백은 외부에서 설정 가능
     private var onScriptEndCallback: (() -> Unit)? = null
+
+    init {
+        // 초기 시나리오를 PLAYGROUND로 설정
+        StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
+    }
 
     fun setOnScriptEnd(callback: () -> Unit) {
         onScriptEndCallback = callback
