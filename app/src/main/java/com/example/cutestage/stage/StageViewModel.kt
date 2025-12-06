@@ -1,29 +1,40 @@
 package com.example.cutestage.stage
 
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import com.example.cutestage.stage.repository.ScenarioRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * StageView의 상태와 비즈니스 로직을 관리하는 ViewModel
+ *
+ * Hilt를 사용하여 의존성을 주입받습니다.
  */
-class StageViewModel(
-    initialScript: TheaterScript?,
-    private val onScriptEnd: () -> Unit
+@HiltViewModel
+class StageViewModel @Inject constructor(
+    private val scenarioRepository: ScenarioRepository
 ) : ViewModel() {
 
-    var state by mutableStateOf(
-        StageState(currentScript = initialScript)
-    )
+    var state by mutableStateOf(StageState())
         private set
+
+    // onScriptEnd 콜백은 외부에서 설정 가능
+    private var onScriptEndCallback: (() -> Unit)? = null
+
+    fun setOnScriptEnd(callback: () -> Unit) {
+        onScriptEndCallback = callback
+    }
+
+    fun setInitialScript(script: TheaterScript?) {
+        if (script != null && state.currentScript == null) {
+            state = state.copy(currentScript = script)
+        }
+    }
 
     /**
      * 이벤트 핸들러
@@ -140,20 +151,24 @@ class StageViewModel(
             if (isMale) {
                 newMaleAngryCount++
                 if (newMaleAngryCount >= 3) {
-                    interaction = interaction.copy(
-                        maleClickCount = 0,
-                        maleAngryCount = 0
+                    state = state.copy(
+                        interactionState = interaction.copy(
+                            maleClickCount = 0,
+                            maleAngryCount = 0
+                        )
                     )
-                    return // 리셋 후 종료
+                    return
                 }
             } else {
                 newFemaleAngryCount++
                 if (newFemaleAngryCount >= 3) {
-                    interaction = interaction.copy(
-                        femaleClickCount = 0,
-                        femaleAngryCount = 0
+                    state = state.copy(
+                        interactionState = interaction.copy(
+                            femaleClickCount = 0,
+                            femaleAngryCount = 0
+                        )
                     )
-                    return // 리셋 후 종료
+                    return
                 }
             }
         }
@@ -219,8 +234,8 @@ class StageViewModel(
         )
     }
 
-    // AI 생성은 외부(Composable)에서 Context와 함께 호출
-    fun generateAIScenario(context: Context, input: String) {
+    private fun handleGenerateAI() {
+        val input = state.aiGenerationState.userInput
         if (input.isBlank()) return
 
         viewModelScope.launch {
@@ -232,21 +247,8 @@ class StageViewModel(
             )
 
             try {
-                val generatedScenario = withContext(Dispatchers.IO) {
-                    GeminiScenarioGenerator.generateScenario(context, input)
-                }
-
-                if (generatedScenario.status == "error") {
-                    state = state.copy(
-                        aiGenerationState = state.aiGenerationState.copy(
-                            error = generatedScenario.message,
-                            isGenerating = false
-                        )
-                    )
-                    return@launch
-                }
-
-                val theaterScript = ScenarioConverter.convertToTheaterScript(generatedScenario)
+                // Repository를 통해 AI 생성 (완전히 캡슐화)
+                val theaterScript = scenarioRepository.generateFromAI(input)
 
                 state = state.copy(
                     currentScript = theaterScript,
@@ -262,11 +264,6 @@ class StageViewModel(
                 )
             }
         }
-    }
-
-    private fun handleGenerateAI() {
-        // Context가 필요하므로 외부에서 호출하도록 변경
-        // StageViewContent에서 generateAIScenario() 직접 호출
     }
 
     // ==================== 타임라인 ====================
@@ -290,7 +287,7 @@ class StageViewModel(
         state = state.copy(
             playbackState = state.playbackState.copy(isPlaying = false)
         )
-        onScriptEnd()
+        onScriptEndCallback?.invoke()
 
         // PLAYGROUND로 복귀
         StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
@@ -298,28 +295,5 @@ class StageViewModel(
             currentScript = StageTestScenario.createTestScript(),
             playbackState = PlaybackState()
         )
-    }
-
-    /**
-     * Context가 필요한 작업을 위한 헬퍼
-     */
-    fun initScenarioConverter(context: Context) {
-        ScenarioConverter.init(context)
-    }
-}
-
-/**
- * StageViewModel Factory
- */
-class StageViewModelFactory(
-    private val initialScript: TheaterScript?,
-    private val onScriptEnd: () -> Unit
-) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(StageViewModel::class.java)) {
-            return StageViewModel(initialScript, onScriptEnd) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

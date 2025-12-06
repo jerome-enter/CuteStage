@@ -15,48 +15,37 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.cutestage.R
 import kotlinx.coroutines.delay
 
 /**
  * 연극 무대 컴포저블
  *
- * ViewModel을 내부에 포함하여 복잡한 상태를 자동으로 관리합니다.
+ * Hilt를 통해 ViewModel을 자동으로 주입받아 복잡한 상태를 관리합니다.
  * 여러 곳에서 독립적으로 재사용 가능하며, Configuration Change에도 안전합니다.
  *
  * @param modifier Modifier
  * @param script 실행할 스크립트 (null이면 빈 무대)
  * @param onScriptEnd 스크립트 종료 콜백
+ * @param viewModel Hilt가 자동 주입 (테스트 시 수동 주입 가능)
  */
 @Composable
 fun StageView(
     modifier: Modifier = Modifier,
     script: TheaterScript? = null,
     onScriptEnd: () -> Unit = {},
+    viewModel: StageViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-
-    // ViewModel 생성 (각 StageView 인스턴스마다 독립적)
-    val viewModel: StageViewModel = viewModel(
-        factory = StageViewModelFactory(script, onScriptEnd)
-    )
-
-    // Context 초기화 (AI 생성에 필요)
-    LaunchedEffect(Unit) {
-        viewModel.initScenarioConverter(context)
+    // 초기 스크립트 설정
+    LaunchedEffect(script) {
+        viewModel.setInitialScript(script)
+        viewModel.setOnScriptEnd(onScriptEnd)
     }
 
     StageViewContent(
         state = viewModel.state,
-        onEvent = { event ->
-            // AI 생성만 특별 처리 (Context 필요)
-            if (event is StageEvent.GenerateAIScenario) {
-                viewModel.generateAIScenario(context, viewModel.state.aiGenerationState.userInput)
-            } else {
-                viewModel.handleEvent(event)
-            }
-        },
+        onEvent = viewModel::handleEvent,  // 완전히 일관된 API!
         modifier = modifier
     )
 }
