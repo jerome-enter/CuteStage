@@ -46,7 +46,15 @@ fun CuteStageNavigation(
         composable(Screen.Stage.route) {
             StageScreen(
                 onScenarioSelectClick = {
-                    navController.navigate(Screen.ScenarioList.route)
+                    // ScenarioList로 이동하되, Stage 위에만 쌓이도록
+                    navController.navigate(Screen.ScenarioList.route) {
+                        // Stage 하나만 백스택에 유지
+                        popUpTo(Screen.Stage.route) {
+                            inclusive = false
+                        }
+                        // 같은 화면 중복 방지
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -55,7 +63,14 @@ fun CuteStageNavigation(
         composable(Screen.ScenarioList.route) {
             ScenarioListScreen(
                 onScenarioClick = { scenarioId ->
-                    navController.navigate(Screen.Player.createRoute(scenarioId))
+                    // Player로 이동하되, ScenarioList를 스택에서 제거
+                    navController.navigate(Screen.Player.createRoute(scenarioId)) {
+                        // Stage만 남기고 ScenarioList 제거
+                        popUpTo(Screen.Stage.route) {
+                            inclusive = false
+                        }
+                        launchSingleTop = true
+                    }
                 },
                 onEditClick = { scenarioId ->
                     navController.navigate(Screen.ScenarioCreator.createRoute(scenarioId))
@@ -104,7 +119,13 @@ fun CuteStageNavigation(
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
                     StageScreen(
                         onScenarioSelectClick = {
-                            navController.navigate(Screen.ScenarioList.route)
+                            // ScenarioList로 이동하되, Player를 스택에서 제거
+                            navController.navigate(Screen.ScenarioList.route) {
+                                popUpTo(Screen.Stage.route) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -113,7 +134,12 @@ fun CuteStageNavigation(
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.BASIC
                     StageScreen(
                         onScenarioSelectClick = {
-                            navController.navigate(Screen.ScenarioList.route)
+                            navController.navigate(Screen.ScenarioList.route) {
+                                popUpTo(Screen.Stage.route) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -122,7 +148,12 @@ fun CuteStageNavigation(
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.COUPLE_FIGHT
                     StageScreen(
                         onScenarioSelectClick = {
-                            navController.navigate(Screen.ScenarioList.route)
+                            navController.navigate(Screen.ScenarioList.route) {
+                                popUpTo(Screen.Stage.route) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -132,7 +163,12 @@ fun CuteStageNavigation(
                         StageTestScenario.ScenarioType.OKSUN_MONOLOGUE
                     StageScreen(
                         onScenarioSelectClick = {
-                            navController.navigate(Screen.ScenarioList.route)
+                            navController.navigate(Screen.ScenarioList.route) {
+                                popUpTo(Screen.Stage.route) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -141,7 +177,12 @@ fun CuteStageNavigation(
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.I_AM_SOLO
                     StageScreen(
                         onScenarioSelectClick = {
-                            navController.navigate(Screen.ScenarioList.route)
+                            navController.navigate(Screen.ScenarioList.route) {
+                                popUpTo(Screen.Stage.route) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -150,7 +191,12 @@ fun CuteStageNavigation(
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.FOOLISH_TRICK
                     StageScreen(
                         onScenarioSelectClick = {
-                            navController.navigate(Screen.ScenarioList.route)
+                            navController.navigate(Screen.ScenarioList.route) {
+                                popUpTo(Screen.Stage.route) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -159,7 +205,12 @@ fun CuteStageNavigation(
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.SONG
                     StageScreen(
                         onScenarioSelectClick = {
-                            navController.navigate(Screen.ScenarioList.route)
+                            navController.navigate(Screen.ScenarioList.route) {
+                                popUpTo(Screen.Stage.route) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
