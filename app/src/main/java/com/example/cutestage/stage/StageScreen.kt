@@ -32,7 +32,9 @@ import com.example.cutestage.R
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StageScreen() {
+fun StageScreen(
+    onScenarioSelectClick: (() -> Unit)? = null
+) {
     // Screen에서 ViewModel 생성 (Hilt 주입)
     val viewModel: StageViewModel = hiltViewModel()
 
@@ -78,6 +80,7 @@ fun StageScreen() {
                 // StageView (고정 높이, ViewModel 공유)
                 StageView(
                     viewModel = viewModel,
+                    onScenarioSelectClick = onScenarioSelectClick,
                     modifier = Modifier.fillMaxWidth()
                 )
 

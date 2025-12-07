@@ -29,6 +29,7 @@ internal fun StageControls(
     onScenarioSelected: (StageTestScenario.ScenarioType, TheaterScript, Boolean) -> Unit,
     onShowAIDialog: () -> Unit,
     onPlay: () -> Unit,
+    onScenarioSelectClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -91,7 +92,8 @@ internal fun StageControls(
             ) {
                 ScenarioSelector(
                     onScenarioSelected = onScenarioSelected,
-                    onShowAIDialog = onShowAIDialog
+                    onShowAIDialog = onShowAIDialog,
+                    onScenarioSelectClick = onScenarioSelectClick
                 )
 
                 // 재생 버튼
@@ -250,216 +252,31 @@ private fun VoiceEngineMenuItem(
 }
 
 /**
- * 시나리오 선택 UI
+ * 시나리오 선택 UI - 팝업 제거, 항상 네비게이션으로 이동
  */
 @Composable
 private fun ScenarioSelector(
     onScenarioSelected: (StageTestScenario.ScenarioType, TheaterScript, Boolean) -> Unit,
-    onShowAIDialog: () -> Unit
+    onShowAIDialog: () -> Unit,
+    onScenarioSelectClick: (() -> Unit)?
 ) {
-    var showMenu by remember { mutableStateOf(false) }
-
-    Box {
-        Surface(
-            onClick = { showMenu = true },
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(32.dp),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = "시나리오 선택",
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-        }
-
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false },
-        ) {
-            val currentScenario = StageTestScenario.currentScenario
-
-            ScenarioMenuItem(
-                text = "🏠 놀이터 (대기실)",
-                scenarioType = StageTestScenario.ScenarioType.PLAYGROUND,
-                currentScenario = currentScenario,
-                onSelect = {
-                    showMenu = false
-                    StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
-                    onScenarioSelected(
-                        StageTestScenario.ScenarioType.PLAYGROUND,
-                        StageTestScenario.createTestScript(),
-                        false
-                    )
-                }
-            )
-
-            ScenarioMenuItem(
-                text = "폭삭 속았수다 🐟",
-                scenarioType = StageTestScenario.ScenarioType.FOOLISH_TRICK,
-                currentScenario = currentScenario,
-                onSelect = {
-                    showMenu = false
-                    StageTestScenario.currentScenario = StageTestScenario.ScenarioType.FOOLISH_TRICK
-                    onScenarioSelected(
-                        StageTestScenario.ScenarioType.FOOLISH_TRICK,
-                        StageFoolishTrick.createFoolishTrickScenario(),
-                        true
-                    )
-                }
-            )
-
-            ScenarioMenuItem(
-                text = "옥순의 혼잣말",
-                scenarioType = StageTestScenario.ScenarioType.OKSUN_MONOLOGUE,
-                currentScenario = currentScenario,
-                onSelect = {
-                    showMenu = false
-                    StageTestScenario.currentScenario =
-                        StageTestScenario.ScenarioType.OKSUN_MONOLOGUE
-                    onScenarioSelected(
-                        StageTestScenario.ScenarioType.OKSUN_MONOLOGUE,
-                        StageTestScenario.createTestScript(),
-                        true
-                    )
-                }
-            )
-
-            ScenarioMenuItem(
-                text = "부부싸움",
-                scenarioType = StageTestScenario.ScenarioType.COUPLE_FIGHT,
-                currentScenario = currentScenario,
-                onSelect = {
-                    showMenu = false
-                    StageTestScenario.currentScenario = StageTestScenario.ScenarioType.COUPLE_FIGHT
-                    onScenarioSelected(
-                        StageTestScenario.ScenarioType.COUPLE_FIGHT,
-                        StageTestScenario.createTestScript(),
-                        true
-                    )
-                }
-            )
-
-            ScenarioMenuItem(
-                text = "만남 (정적)",
-                scenarioType = StageTestScenario.ScenarioType.BASIC,
-                currentScenario = currentScenario,
-                onSelect = {
-                    showMenu = false
-                    StageTestScenario.currentScenario = StageTestScenario.ScenarioType.BASIC
-                    onScenarioSelected(
-                        StageTestScenario.ScenarioType.BASIC,
-                        StageTestScenario.createTestScript(),
-                        true
-                    )
-                }
-            )
-
-            ScenarioMenuItem(
-                text = "나는솔로 ♥",
-                scenarioType = StageTestScenario.ScenarioType.I_AM_SOLO,
-                currentScenario = currentScenario,
-                onSelect = {
-                    showMenu = false
-                    StageTestScenario.currentScenario = StageTestScenario.ScenarioType.I_AM_SOLO
-                    onScenarioSelected(
-                        StageTestScenario.ScenarioType.I_AM_SOLO,
-                        StageTestScenario.createTestScript(),
-                        true
-                    )
-                }
-            )
-
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Spacer(modifier = Modifier.size(20.dp))
-                        Text("🎵 하얀 바다새 (듀엣)")
-                    }
-                },
-                onClick = {
-                    showMenu = false
-                    onScenarioSelected(
-                        StageTestScenario.ScenarioType.SONG,
-                        StageSongScenario.createWhiteSeagullScenario(),
-                        true
-                    )
-                }
-            )
-
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Spacer(modifier = Modifier.size(20.dp))
-                        Text("💕 사랑고백 (선택형)")
-                    }
-                },
-                onClick = {
-                    showMenu = false
-                    onScenarioSelected(
-                        StageTestScenario.ScenarioType.COUPLE_FIGHT,
-                        StageLoveConfession.createLoveConfessionScenario(),
-                        true
-                    )
-                }
-            )
-
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Spacer(modifier = Modifier.size(20.dp))
-                        Text("AI 시나리오 생성")
-                    }
-                },
-                onClick = {
-                    showMenu = false
-                    onShowAIDialog()
-                }
+    Surface(
+        onClick = {
+            onScenarioSelectClick?.invoke()
+        },
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(32.dp),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = Icons.Filled.Menu,
+                contentDescription = "시나리오 선택",
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         }
     }
-}
-
-@Composable
-private fun ScenarioMenuItem(
-    text: String,
-    scenarioType: StageTestScenario.ScenarioType,
-    currentScenario: StageTestScenario.ScenarioType,
-    onSelect: () -> Unit
-) {
-    DropdownMenuItem(
-        text = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (currentScenario == scenarioType) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = "선택됨",
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                } else {
-                    Spacer(modifier = Modifier.size(20.dp))
-                }
-                Text(text)
-            }
-        },
-        onClick = onSelect
-    )
 }
 
 /**

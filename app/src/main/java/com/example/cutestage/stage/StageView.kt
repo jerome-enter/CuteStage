@@ -28,6 +28,7 @@ import kotlinx.coroutines.delay
  * @param modifier Modifier
  * @param script 실행할 스크립트 (null이면 빈 무대)
  * @param onScriptEnd 스크립트 종료 콜백
+ * @param onScenarioSelectClick 시나리오 선택 버튼 클릭 시 호출
  * @param viewModel Hilt가 자동 주입 (테스트 시 수동 주입 가능)
  */
 @Composable
@@ -35,6 +36,7 @@ fun StageView(
     modifier: Modifier = Modifier,
     script: TheaterScript? = null,
     onScriptEnd: () -> Unit = {},
+    onScenarioSelectClick: (() -> Unit)? = null,
     viewModel: StageViewModel = hiltViewModel()
 ) {
     // 초기 스크립트 설정
@@ -46,6 +48,7 @@ fun StageView(
     StageViewContent(
         state = viewModel.state,
         onEvent = viewModel::handleEvent,  // 완전히 일관된 API!
+        onScenarioSelectClick = onScenarioSelectClick,
         modifier = modifier
     )
 }
@@ -60,6 +63,7 @@ fun StageView(
 internal fun StageViewContent(
     state: StageState,
     onEvent: (StageEvent) -> Unit,
+    onScenarioSelectClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val currentScene = remember(state.currentScript, state.playbackState.currentSceneIndex) {
@@ -172,7 +176,8 @@ internal fun StageViewContent(
                 onEvent(StageEvent.LoadScenario(scenario, script, shouldPlay))
             },
             onShowAIDialog = { onEvent(StageEvent.ShowAIDialog) },
-            onPlay = { onEvent(StageEvent.Play) }
+            onPlay = { onEvent(StageEvent.Play) },
+            onScenarioSelectClick = onScenarioSelectClick
         )
 
         // 선택지 UI

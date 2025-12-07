@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.cutestage.data.CuteStageDatabase
 import com.example.cutestage.data.module.ModuleDao
+import com.example.cutestage.data.scenario.ScenarioDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,5 +37,11 @@ object DatabaseModule {
     @Singleton
     fun provideModuleDao(database: CuteStageDatabase): ModuleDao {
         return database.moduleDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideScenarioDao(database: CuteStageDatabase): ScenarioDao {
+        return database.scenarioDao()
     }
 }
