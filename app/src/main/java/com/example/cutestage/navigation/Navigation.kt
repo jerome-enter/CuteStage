@@ -7,10 +7,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.cutestage.stage.StageScreen
 import com.example.cutestage.stage.StageTestScenario
 import com.example.cutestage.ui.creator.ScenarioCreatorScreen
-import com.example.cutestage.ui.player.PlayerScreen
+import com.example.cutestage.ui.player.PlayerViewModel
 import com.example.cutestage.ui.scenariolist.ScenarioListScreen
 
 /**
@@ -216,17 +225,60 @@ fun CuteStageNavigation(
                 }
 
                 else -> {
-                    // 사용자 생성 시나리오는 PlayerScreen 사용
-                    PlayerScreen(
-                        onScenarioSelectClick = {
-                            navController.navigate(Screen.ScenarioList.route) {
-                                popUpTo(Screen.Stage.route) {
-                                    inclusive = false
+                    // 사용자 생성 시나리오도 StageScreen 사용
+                    val viewModel: PlayerViewModel = hiltViewModel()
+                    val state = viewModel.state
+
+                    Box(modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)) {
+                        when {
+                            state.isLoading -> {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator(color = Color.White)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text("시나리오 로딩 중...", color = Color.White)
                                 }
-                                launchSingleTop = true
+                            }
+
+                            state.error != null -> {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text("❌", style = MaterialTheme.typography.displayLarge)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        state.error,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+
+                            state.script != null -> {
+                                // ✅ StageScreen 사용 (템플릿과 완전히 동일)
+                                key(state.script) {
+                                    StageScreen(
+                                        script = state.script,
+                                        onScenarioSelectClick = {
+                                            navController.navigate(Screen.ScenarioList.route) {
+                                                popUpTo(Screen.Stage.route) {
+                                                    inclusive = false
+                                                }
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
-                    )
+                    }
                 }
             }
         }

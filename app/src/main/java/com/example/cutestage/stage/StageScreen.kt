@@ -23,20 +23,31 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.cutestage.R
 
 /**
- * Stage 독립 실행 Activity
+ * Stage 화면 (템플릿 + 사용자 시나리오 통합)
  *
  * 주요 기능:
- * - App Bar에 "제롬 연극부" 제목 표시 (검정 배경, 흰색 텍스트, 중앙 정렬)
+ * - App Bar에 "제롬 연극부" 제목 표시
  * - StageView 표시
  * - 등장인물 소개 (스크롤 영역)
+ *
+ * @param script 재생할 TheaterScript (null이면 ViewModel의 current script 사용)
+ * @param onScenarioSelectClick 시나리오 선택 버튼 클릭 콜백
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StageScreen(
+    script: TheaterScript? = null,
     onScenarioSelectClick: (() -> Unit)? = null
 ) {
     // Screen에서 ViewModel 생성 (Hilt 주입)
     val viewModel: StageViewModel = hiltViewModel()
+
+    // script 파라미터가 있으면 설정
+    LaunchedEffect(script) {
+        if (script != null) {
+            viewModel.setInitialScript(script)
+        }
+    }
 
     // 현재 스크립트에서 등장인물 추출
     val characters = remember(viewModel.state.currentScript) {
