@@ -217,7 +217,16 @@ fun CuteStageNavigation(
 
                 else -> {
                     // 사용자 생성 시나리오는 PlayerScreen 사용
-                    PlayerScreen()
+                    PlayerScreen(
+                        onScenarioSelectClick = {
+                            navController.navigate(Screen.ScenarioList.route) {
+                                popUpTo(Screen.Stage.route) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
                 }
             }
         }
