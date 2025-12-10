@@ -22,7 +22,8 @@ class StageViewModel @Inject constructor(
 
     var state by mutableStateOf(
         StageState(
-            currentScript = StageTestScenario.createTestScript() // PLAYGROUND로 초기화
+            currentScript = StageTestScenario.createTestScript(), // PLAYGROUND로 초기화
+            scenarioTitle = "놀이터 (캐릭터 상호작용)" // 초기 제목 설정
         )
     )
         private set
@@ -39,18 +40,22 @@ class StageViewModel @Inject constructor(
         onScriptEndCallback = callback
     }
 
-    fun setInitialScript(script: TheaterScript?, title: String? = null) {
+    fun setInitialScript(script: TheaterScript?) {
         if (script != null) {
             // 새 스크립트로 상태 완전 초기화
+            // scenarioTitle은 유지 (외부에서 setScenarioTitle로 별도 설정)
             state = state.copy(
                 currentScript = script,
-                scenarioTitle = title,
                 playbackState = PlaybackState(),
                 interactionState = InteractionState(),
                 choiceState = ChoiceState(),
                 aiGenerationState = AIGenerationState()
             )
         }
+    }
+
+    fun setScenarioTitle(title: String?) {
+        state = state.copy(scenarioTitle = title)
     }
 
     /**

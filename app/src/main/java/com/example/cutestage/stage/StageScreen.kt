@@ -31,23 +31,21 @@ import com.example.cutestage.R
  * - 등장인물 소개 (스크롤 영역)
  *
  * @param script 재생할 TheaterScript (null이면 ViewModel의 current script 사용)
- * @param scenarioTitle 시나리오 제목 (등장인물 섹션에 표시)
  * @param onScenarioSelectClick 시나리오 선택 버튼 클릭 콜백
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StageScreen(
     script: TheaterScript? = null,
-    scenarioTitle: String? = null,
     onScenarioSelectClick: (() -> Unit)? = null
 ) {
     // Screen에서 ViewModel 생성 (Hilt 주입)
     val viewModel: StageViewModel = hiltViewModel()
 
     // script 파라미터가 있으면 설정
-    LaunchedEffect(script, scenarioTitle) {
+    LaunchedEffect(script) {
         if (script != null) {
-            viewModel.setInitialScript(script, scenarioTitle)
+            viewModel.setInitialScript(script)
         }
     }
 
@@ -57,9 +55,6 @@ fun StageScreen(
             extractCharactersFromScript(it)
         } ?: emptyList()
     }
-
-    // ViewModel에서 시나리오 제목 가져오기 (우선순위: 파라미터 > ViewModel 상태)
-    val displayTitle = scenarioTitle ?: viewModel.state.scenarioTitle
 
     Scaffold(
         topBar = {
@@ -103,7 +98,7 @@ fun StageScreen(
                 // 등장인물 소개 섹션 (스크롤 영역)
                 if (characters.isNotEmpty()) {
                     CharacterIntroductionSection(
-                        scenarioTitle = displayTitle,
+                        scenarioTitle = viewModel.state.scenarioTitle,
                         characters = characters,
                         modifier = Modifier
                             .fillMaxWidth()

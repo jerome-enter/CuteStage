@@ -58,7 +58,6 @@ fun CuteStageNavigation(
         // 메인 무대 화면
         composable(Screen.Stage.route) {
             StageScreen(
-                scenarioTitle = "놀이터 (캐릭터 상호작용)",
                 onScenarioSelectClick = {
                     // ScenarioList로 이동하되, Stage 위에만 쌓이도록
                     navController.navigate(Screen.ScenarioList.route) {
@@ -141,8 +140,11 @@ fun CuteStageNavigation(
             when (scenarioId) {
                 "template_playground" -> {
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
+                    val viewModel: com.example.cutestage.stage.StageViewModel = hiltViewModel()
+                    LaunchedEffect(Unit) {
+                        viewModel.setScenarioTitle("놀이터 (캐릭터 상호작용)")
+                    }
                     StageScreen(
-                        scenarioTitle = "놀이터 (캐릭터 상호작용)",
                         onScenarioSelectClick = {
                             navController.navigate(Screen.ScenarioList.route) {
                                 popUpTo(Screen.Stage.route) {
@@ -156,8 +158,11 @@ fun CuteStageNavigation(
 
                 "template_basic" -> {
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.BASIC
+                    val viewModel: com.example.cutestage.stage.StageViewModel = hiltViewModel()
+                    LaunchedEffect(Unit) {
+                        viewModel.setScenarioTitle("기본 시나리오 - 만남")
+                    }
                     StageScreen(
-                        scenarioTitle = "기본 시나리오 - 만남",
                         onScenarioSelectClick = {
                             navController.navigate(Screen.ScenarioList.route) {
                                 popUpTo(Screen.Stage.route) {
@@ -171,8 +176,11 @@ fun CuteStageNavigation(
 
                 "template_couple_fight" -> {
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.COUPLE_FIGHT
+                    val viewModel: com.example.cutestage.stage.StageViewModel = hiltViewModel()
+                    LaunchedEffect(Unit) {
+                        viewModel.setScenarioTitle("부부싸움")
+                    }
                     StageScreen(
-                        scenarioTitle = "부부싸움",
                         onScenarioSelectClick = {
                             navController.navigate(Screen.ScenarioList.route) {
                                 popUpTo(Screen.Stage.route) {
@@ -187,8 +195,11 @@ fun CuteStageNavigation(
                 "template_oksun" -> {
                     StageTestScenario.currentScenario =
                         StageTestScenario.ScenarioType.OKSUN_MONOLOGUE
+                    val viewModel: com.example.cutestage.stage.StageViewModel = hiltViewModel()
+                    LaunchedEffect(Unit) {
+                        viewModel.setScenarioTitle("옥순의 혼잣말")
+                    }
                     StageScreen(
-                        scenarioTitle = "옥순의 혼잣말",
                         onScenarioSelectClick = {
                             navController.navigate(Screen.ScenarioList.route) {
                                 popUpTo(Screen.Stage.route) {
@@ -202,8 +213,11 @@ fun CuteStageNavigation(
 
                 "template_i_am_solo" -> {
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.I_AM_SOLO
+                    val viewModel: com.example.cutestage.stage.StageViewModel = hiltViewModel()
+                    LaunchedEffect(Unit) {
+                        viewModel.setScenarioTitle("나는 솔로 - 첫눈에 반한 소개팅")
+                    }
                     StageScreen(
-                        scenarioTitle = "나는 솔로 - 첫눈에 반한 소개팅",
                         onScenarioSelectClick = {
                             navController.navigate(Screen.ScenarioList.route) {
                                 popUpTo(Screen.Stage.route) {
@@ -217,8 +231,11 @@ fun CuteStageNavigation(
 
                 "template_foolish_trick" -> {
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.FOOLISH_TRICK
+                    val viewModel: com.example.cutestage.stage.StageViewModel = hiltViewModel()
+                    LaunchedEffect(Unit) {
+                        viewModel.setScenarioTitle("폭삭 속았수다")
+                    }
                     StageScreen(
-                        scenarioTitle = "폭삭 속았수다",
                         onScenarioSelectClick = {
                             navController.navigate(Screen.ScenarioList.route) {
                                 popUpTo(Screen.Stage.route) {
@@ -232,8 +249,11 @@ fun CuteStageNavigation(
 
                 "template_song" -> {
                     StageTestScenario.currentScenario = StageTestScenario.ScenarioType.SONG
+                    val viewModel: com.example.cutestage.stage.StageViewModel = hiltViewModel()
+                    LaunchedEffect(Unit) {
+                        viewModel.setScenarioTitle("하얀 바다새 (듀엣)")
+                    }
                     StageScreen(
-                        scenarioTitle = "하얀 바다새 (듀엣)",
                         onScenarioSelectClick = {
                             navController.navigate(Screen.ScenarioList.route) {
                                 popUpTo(Screen.Stage.route) {
@@ -285,9 +305,18 @@ fun CuteStageNavigation(
                             state.script != null -> {
                                 // ✅ scenarioId를 key로 사용하여 완전히 새로운 ViewModel 생성
                                 key(scenarioId) {
+                                    // StageScreen이 mount될 때 제목 설정
+                                    val stageViewModel: com.example.cutestage.stage.StageViewModel =
+                                        androidx.hilt.navigation.compose.hiltViewModel()
+
+                                    LaunchedEffect(state.scenarioTitle) {
+                                        if (state.scenarioTitle != null) {
+                                            stageViewModel.setScenarioTitle(state.scenarioTitle)
+                                        }
+                                    }
+
                                     StageScreen(
                                         script = state.script,
-                                        scenarioTitle = state.scenarioTitle,
                                         onScenarioSelectClick = {
                                             navController.navigate(Screen.ScenarioList.route) {
                                                 popUpTo(Screen.Stage.route) {
