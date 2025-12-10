@@ -40,8 +40,15 @@ class StageViewModel @Inject constructor(
     }
 
     fun setInitialScript(script: TheaterScript?) {
-        if (script != null && state.currentScript == null) {
-            state = state.copy(currentScript = script)
+        if (script != null) {
+            // 새 스크립트로 상태 완전 초기화
+            state = state.copy(
+                currentScript = script,
+                playbackState = PlaybackState(),
+                interactionState = InteractionState(),
+                choiceState = ChoiceState(),
+                aiGenerationState = AIGenerationState()
+            )
         }
     }
 

@@ -38,6 +38,10 @@ sealed class Screen(val route: String) {
         }
     }
 
+    object BeatCreator : Screen("beat_creator") {
+        fun createRoute(): String = "beat_creator"
+    }
+
     object Player : Screen("player/{scenarioId}") {
         fun createRoute(scenarioId: String): String = "player/$scenarioId"
     }
@@ -85,8 +89,18 @@ fun CuteStageNavigation(
                     navController.navigate(Screen.ScenarioCreator.createRoute(scenarioId))
                 },
                 onCreateNew = {
-                    navController.navigate(Screen.ScenarioCreator.createRoute())
+                    // Beat Creator로 이동
+                    navController.navigate(Screen.BeatCreator.createRoute())
                 },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Beat 기반 시나리오 생성 화면
+        composable(Screen.BeatCreator.route) {
+            com.example.cutestage.ui.creator.BeatCreatorScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -262,8 +276,8 @@ fun CuteStageNavigation(
                             }
 
                             state.script != null -> {
-                                // ✅ StageScreen 사용 (템플릿과 완전히 동일)
-                                key(state.script) {
+                                // ✅ scenarioId를 key로 사용하여 완전히 새로운 ViewModel 생성
+                                key(scenarioId) {
                                     StageScreen(
                                         script = state.script,
                                         onScenarioSelectClick = {

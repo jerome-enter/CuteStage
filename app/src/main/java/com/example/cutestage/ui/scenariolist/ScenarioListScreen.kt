@@ -320,14 +320,29 @@ private fun ScenarioCard(
 
             // 설명 (있을 경우)
             if (scenario.description.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = scenario.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                val displayDescription = try {
+                    // Beat 시나리오인 경우 JSON에서 실제 설명 추출
+                    if (scenario.description.startsWith("{") && scenario.description.contains("\"type\"")) {
+                        val gson = com.google.gson.Gson()
+                        val map = gson.fromJson(scenario.description, Map::class.java) as? Map<*, *>
+                        map?.get("description")?.toString() ?: ""
+                    } else {
+                        scenario.description
+                    }
+                } catch (e: Exception) {
+                    scenario.description
+                }
+
+                if (displayDescription.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = displayDescription,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

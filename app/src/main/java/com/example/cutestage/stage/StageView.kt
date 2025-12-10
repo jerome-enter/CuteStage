@@ -39,9 +39,11 @@ fun StageView(
     onScenarioSelectClick: (() -> Unit)? = null,
     viewModel: StageViewModel = hiltViewModel()
 ) {
-    // 초기 스크립트 설정
+    // 스크립트가 변경될 때마다 ViewModel 초기화
     LaunchedEffect(script) {
-        viewModel.setInitialScript(script)
+        if (script != null) {
+            viewModel.setInitialScript(script)
+        }
         viewModel.setOnScriptEnd(onScriptEnd)
     }
 

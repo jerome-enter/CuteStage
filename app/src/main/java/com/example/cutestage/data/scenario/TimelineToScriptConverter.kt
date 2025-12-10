@@ -22,6 +22,19 @@ class TimelineToScriptConverter @Inject constructor(
      * 시나리오 ID로부터 TheaterScript 생성
      */
     suspend fun convert(scenarioId: String): TheaterScript? {
+        val scenario = scenarioRepository.getScenarioById(scenarioId)
+            ?: return null
+
+        // Beat 기반 시나리오인지 확인
+        if (scenario.description.startsWith("{") && scenario.description.contains("\"type\"")) {
+            return try {
+                convertBeatScenario(scenario.description)
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        // 기존 타임라인 기반 시나리오
         val scenarioWithTimeline = scenarioRepository.getScenarioWithTimeline(scenarioId)
             ?: return null
 
@@ -38,6 +51,28 @@ class TimelineToScriptConverter @Inject constructor(
         }
 
         return TheaterScript(scenes = scenes)
+    }
+
+    /**
+     * Beat 기반 시나리오를 TheaterScript로 변환
+     */
+    private fun convertBeatScenario(descriptionJson: String): TheaterScript? {
+        return try {
+            val gson = com.google.gson.Gson()
+            val beatData = gson.fromJson(descriptionJson, Map::class.java) as Map<*, *>
+
+            if (beatData["type"] != "beat") {
+                return null
+            }
+
+            val beatsJson = beatData["beats"] as? String ?: return null
+            val beats = com.example.cutestage.stage.beat.BeatJsonHelper.toBeatList(beatsJson)
+
+            // Beat 리스트를 TheaterScript로 변환
+            com.example.cutestage.stage.beat.BeatConverter.beatsToTheaterScript(beats)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /**

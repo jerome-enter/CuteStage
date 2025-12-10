@@ -107,6 +107,13 @@ class ScenarioRepository @Inject constructor(
         scenarioDao.deleteScenarioById(scenarioId)
     }
 
+    /**
+     * Beat 기반 시나리오 저장
+     */
+    suspend fun saveBeatScenario(scenario: ScenarioEntity) {
+        scenarioDao.insertScenario(scenario)
+    }
+
     // ==================== 타임라인 조회 ====================
 
     suspend fun getTimelineItems(scenarioId: String): List<TimelineItemEntity> =
