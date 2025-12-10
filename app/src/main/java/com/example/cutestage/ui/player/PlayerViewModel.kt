@@ -36,8 +36,10 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val script = converter.convert(scenarioId)
+                val scenario = converter.getScenario(scenarioId)
                 state = state.copy(
                     script = script,
+                    scenarioTitle = scenario?.title,
                     isLoading = false,
                     error = if (script == null) "시나리오를 불러올 수 없습니다" else null
                 )
@@ -53,6 +55,7 @@ class PlayerViewModel @Inject constructor(
 
 data class PlayerState(
     val script: TheaterScript? = null,
+    val scenarioTitle: String? = null,
     val isLoading: Boolean = true,
     val error: String? = null
 )

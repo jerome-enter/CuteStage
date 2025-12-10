@@ -39,11 +39,12 @@ class StageViewModel @Inject constructor(
         onScriptEndCallback = callback
     }
 
-    fun setInitialScript(script: TheaterScript?) {
+    fun setInitialScript(script: TheaterScript?, title: String? = null) {
         if (script != null) {
             // 새 스크립트로 상태 완전 초기화
             state = state.copy(
                 currentScript = script,
+                scenarioTitle = title,
                 playbackState = PlaybackState(),
                 interactionState = InteractionState(),
                 choiceState = ChoiceState(),
@@ -106,6 +107,7 @@ class StageViewModel @Inject constructor(
         StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
         state = state.copy(
             currentScript = StageTestScenario.createTestScript(),
+            scenarioTitle = "놀이터 (캐릭터 상호작용)",
             playbackState = PlaybackState()
         )
     }
@@ -119,8 +121,20 @@ class StageViewModel @Inject constructor(
     // ==================== 시나리오 제어 ====================
 
     private fun handleLoadScenario(event: StageEvent.LoadScenario) {
+        // 시나리오 타입에 따른 제목 설정
+        val title = when (event.scenario) {
+            StageTestScenario.ScenarioType.PLAYGROUND -> "놀이터 (캐릭터 상호작용)"
+            StageTestScenario.ScenarioType.BASIC -> "기본 시나리오 - 만남"
+            StageTestScenario.ScenarioType.COUPLE_FIGHT -> "부부싸움"
+            StageTestScenario.ScenarioType.OKSUN_MONOLOGUE -> "옥순의 혼잣말"
+            StageTestScenario.ScenarioType.I_AM_SOLO -> "나는 솔로 - 첫눈에 반한 소개팅"
+            StageTestScenario.ScenarioType.FOOLISH_TRICK -> "폭삭 속았수다"
+            StageTestScenario.ScenarioType.SONG -> "하얀 바다새 (듀엣)"
+        }
+
         state = state.copy(
             currentScript = event.script,
+            scenarioTitle = title,
             playbackState = PlaybackState(
                 isPlaying = event.shouldPlay,
                 speed = state.playbackState.speed
@@ -309,6 +323,7 @@ class StageViewModel @Inject constructor(
         StageTestScenario.currentScenario = StageTestScenario.ScenarioType.PLAYGROUND
         state = state.copy(
             currentScript = StageTestScenario.createTestScript(),
+            scenarioTitle = "놀이터 (캐릭터 상호작용)",
             playbackState = PlaybackState()
         )
     }

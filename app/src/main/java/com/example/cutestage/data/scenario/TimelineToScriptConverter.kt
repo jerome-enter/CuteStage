@@ -19,6 +19,13 @@ class TimelineToScriptConverter @Inject constructor(
 ) {
 
     /**
+     * 시나리오 엔티티 가져오기
+     */
+    suspend fun getScenario(scenarioId: String): ScenarioEntity? {
+        return scenarioRepository.getScenarioById(scenarioId)
+    }
+
+    /**
      * 시나리오 ID로부터 TheaterScript 생성
      */
     suspend fun convert(scenarioId: String): TheaterScript? {

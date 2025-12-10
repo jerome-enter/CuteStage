@@ -8,6 +8,7 @@ import androidx.compose.runtime.Immutable
 @Immutable
 data class StageState(
     val currentScript: TheaterScript? = null,
+    val scenarioTitle: String? = null,
     val playbackState: PlaybackState = PlaybackState(),
     val interactionState: InteractionState = InteractionState(),
     val choiceState: ChoiceState = ChoiceState(),
