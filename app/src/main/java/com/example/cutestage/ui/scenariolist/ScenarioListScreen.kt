@@ -1,6 +1,7 @@
 package com.example.cutestage.ui.scenariolist
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -275,9 +276,16 @@ private fun ScenarioCard(
     onDeleteClick: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.material3.ripple(),
+                onClick = onPlayClick
+            ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -400,24 +408,6 @@ private fun ScenarioCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 재생 버튼
-            Button(
-                onClick = onPlayClick,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = "재생",
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("재생하기")
-            }
         }
     }
 }
