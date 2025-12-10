@@ -57,25 +57,19 @@ fun ScenarioListScreen(
                         }
                     }
                 },
+                actions = {
+                    IconButton(onClick = onCreateNew) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "새로 만들기",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCreateNew,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Add, "새로 만들기")
-                    Text("새로 만들기")
-                }
-            }
         }
     ) { paddingValues ->
         Box(
