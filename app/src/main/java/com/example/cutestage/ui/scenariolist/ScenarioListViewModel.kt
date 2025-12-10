@@ -75,6 +75,20 @@ class ScenarioListViewModel @Inject constructor(
     fun clearError() {
         state = state.copy(errorMessage = null)
     }
+
+    /**
+     * 템플릿 영역 펼침/접기 토글
+     */
+    fun toggleTemplateExpanded() {
+        state = state.copy(isTemplateExpanded = !state.isTemplateExpanded)
+    }
+
+    /**
+     * 내 시나리오 영역 펼침/접기 토글
+     */
+    fun toggleUserExpanded() {
+        state = state.copy(isUserExpanded = !state.isUserExpanded)
+    }
 }
 
 /**
@@ -83,5 +97,7 @@ class ScenarioListViewModel @Inject constructor(
 data class ScenarioListState(
     val showDeleteDialog: Boolean = false,
     val scenarioToDelete: ScenarioEntity? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isTemplateExpanded: Boolean = true,  // 템플릿 영역 펼침 상태
+    val isUserExpanded: Boolean = true       // 내 시나리오 영역 펼침 상태
 )

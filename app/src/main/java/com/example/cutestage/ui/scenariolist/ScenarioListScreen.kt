@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
@@ -86,22 +88,39 @@ fun ScenarioListScreen(
                 // 템플릿 섹션
                 if (templateScenarios.isNotEmpty()) {
                     item {
-                        Text(
-                            "📚 기본 제공 시나리오",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.toggleTemplateExpanded() }
+                                .padding(top = 8.dp, bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "📚 기본 제공 시나리오",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Icon(
+                                imageVector = if (state.isTemplateExpanded)
+                                    Icons.Default.KeyboardArrowUp
+                                else
+                                    Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (state.isTemplateExpanded) "접기" else "펼치기"
+                            )
+                        }
                     }
 
-                    items(templateScenarios) { scenario ->
-                        ScenarioCard(
-                            scenario = scenario,
-                            isTemplate = true,
-                            onPlayClick = { onScenarioClick(scenario.id) },
-                            onEditClick = { }, // 템플릿은 편집 불가
-                            onDeleteClick = { } // 템플릿은 삭제 불가
-                        )
+                    if (state.isTemplateExpanded) {
+                        items(templateScenarios) { scenario ->
+                            ScenarioCard(
+                                scenario = scenario,
+                                isTemplate = true,
+                                onPlayClick = { onScenarioClick(scenario.id) },
+                                onEditClick = { }, // 템플릿은 편집 불가
+                                onDeleteClick = { } // 템플릿은 삭제 불가
+                            )
+                        }
                     }
 
                     // 구분선
@@ -114,51 +133,70 @@ fun ScenarioListScreen(
 
                 // 내 시나리오 섹션
                 item {
-                    Text(
-                        "🎭 내 시나리오",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.toggleUserExpanded() }
+                            .padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "🎭 내 시나리오",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            imageVector = if (state.isUserExpanded)
+                                Icons.Default.KeyboardArrowUp
+                            else
+                                Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (state.isUserExpanded) "접기" else "펼치기"
+                        )
+                    }
                 }
 
-                if (userScenarios.isEmpty()) {
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                if (state.isUserExpanded) {
+                    if (userScenarios.isEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                        alpha = 0.5f
+                                    )
+                                )
                             ) {
-                                Text(
-                                    "아직 만든 시나리오가 없어요",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    "첫 시나리오를 만들어보세요!",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "아직 만든 시나리오가 없어요",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        "첫 시나리오를 만들어보세요!",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
-                    }
-                } else {
-                    items(userScenarios) { scenario ->
-                        ScenarioCard(
-                            scenario = scenario,
-                            isTemplate = false,
-                            onPlayClick = { onScenarioClick(scenario.id) },
-                            onEditClick = { onEditClick(scenario.id) },
-                            onDeleteClick = { viewModel.showDeleteDialog(scenario) }
-                        )
+                    } else {
+                        items(userScenarios) { scenario ->
+                            ScenarioCard(
+                                scenario = scenario,
+                                isTemplate = false,
+                                onPlayClick = { onScenarioClick(scenario.id) },
+                                onEditClick = { onEditClick(scenario.id) },
+                                onDeleteClick = { viewModel.showDeleteDialog(scenario) }
+                            )
+                        }
                     }
                 }
             }
