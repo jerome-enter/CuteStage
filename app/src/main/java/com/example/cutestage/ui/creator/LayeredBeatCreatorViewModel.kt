@@ -357,6 +357,38 @@ class LayeredBeatCreatorViewModel @Inject constructor(
         )
     }
 
+    /**
+     * 인라인 편집기에서 이동 추가
+     */
+    fun addMovementInline(
+        beatIndex: Int,
+        characterId: String,
+        position: StagePosition,
+        startTime: Float
+    ) {
+        if (characterId.isEmpty()) {
+            state = state.copy(errorMessage = "캐릭터를 선택해주세요")
+            return
+        }
+
+        val newMovement = MovementEntry(
+            characterId = characterId,
+            position = position,
+            startTime = startTime,
+            autoWalk = true
+        )
+
+        val updatedBeats = state.beats.toMutableList()
+        val beat = updatedBeats[beatIndex]
+        updatedBeats[beatIndex] = beat.copy(
+            movementLayer = beat.movementLayer.copy(
+                movements = beat.movementLayer.movements + newMovement
+            )
+        )
+
+        state = state.copy(beats = updatedBeats)
+    }
+
     fun removeMovement(beatIndex: Int, movementId: String) {
         val updatedBeats = state.beats.toMutableList()
         val beat = updatedBeats[beatIndex]

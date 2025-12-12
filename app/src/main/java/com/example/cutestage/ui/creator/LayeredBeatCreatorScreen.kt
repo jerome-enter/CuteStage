@@ -587,7 +587,10 @@ private fun LayerEditSection(
                     beat = selectedBeat,
                     beatIndex = state.selectedBeatIndex,
                     characters = state.characters,
-                    onAddMovement = { viewModel.showAddMovementDialog() },
+                    backgroundLocation = selectedBeat.locationLayer.location,
+                    onAddMovement = { charId, position, time ->
+                        viewModel.addMovementInline(state.selectedBeatIndex, charId, position, time)
+                    },
                     onRemoveMovement = { viewModel.removeMovement(state.selectedBeatIndex, it) }
                 )
             }
@@ -935,7 +938,11 @@ private fun InlineDialogueEditor(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             rowActions.forEach { action ->
-                                val isSelected = selectedAction == action
+                                val isSelected = if (action == DialogueActionType.NONE) {
+                                    selectedAction == null || selectedAction == DialogueActionType.NONE
+                                } else {
+                                    selectedAction == action
+                                }
                                 FilterChip(
                                     selected = isSelected,
                                     onClick = {
@@ -1216,47 +1223,235 @@ private fun MovementLayerPanel(
     beat: LayeredBeat,
     beatIndex: Int,
     characters: List<CharacterInfo>,
-    onAddMovement: () -> Unit,
+    backgroundLocation: StageLocation,
+    onAddMovement: (String, StagePosition, Float) -> Unit,
     onRemoveMovement: (String) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    // 인라인 편집 상태 관리
+    var isEditing by remember { mutableStateOf(false) }
+    var selectedCharacterId by remember { mutableStateOf("") }
+    var selectedPosition by remember { mutableStateOf(StagePosition.CENTER) }
+    var startTime by remember { mutableStateOf(0f) }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Button(
-            onClick = onAddMovement,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("이동 추가")
+        // 이동 목록
+        items(
+            items = beat.movementLayer.movements.sortedBy { it.startTime },
+            key = { it.id }
+        ) { movement ->
+            val character = characters.find { it.id == movement.characterId }
+            MovementItemCard(
+                movement = movement,
+                characterName = character?.name ?: "Unknown",
+                onRemove = { onRemoveMovement(movement.id) }
+            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (beat.movementLayer.movements.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "이동을 추가하세요",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        // [+ 이동 추가] 버튼 또는 입력 폼
+        item {
+            if (!isEditing) {
+                // [+ 이동 추가] 버튼
+                Button(
+                    onClick = { isEditing = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("이동 추가")
+                }
+            } else {
+                // 입력 폼
+                InlineMovementEditor(
+                    beat = beat,
+                    characters = characters,
+                    backgroundLocation = backgroundLocation,
+                    selectedCharacterId = selectedCharacterId,
+                    selectedPosition = selectedPosition,
+                    startTime = startTime,
+                    onCharacterChange = { selectedCharacterId = it },
+                    onPositionChange = { selectedPosition = it },
+                    onStartTimeChange = { startTime = it },
+                    onCancel = {
+                        isEditing = false
+                        selectedCharacterId = ""
+                        selectedPosition = StagePosition.CENTER
+                        startTime = 0f
+                    },
+                    onAdd = {
+                        if (selectedCharacterId.isNotEmpty()) {
+                            onAddMovement(selectedCharacterId, selectedPosition, startTime)
+                            // 입력 필드 초기화 및 폼 숨기기
+                            selectedCharacterId = ""
+                            selectedPosition = StagePosition.CENTER
+                            startTime = 0f
+                            isEditing = false
+                        }
+                    }
                 )
             }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        }
+    }
+}
+
+/**
+ * 인라인 이동 편집기
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InlineMovementEditor(
+    beat: LayeredBeat,
+    characters: List<CharacterInfo>,
+    backgroundLocation: StageLocation,
+    selectedCharacterId: String,
+    selectedPosition: StagePosition,
+    startTime: Float,
+    onCharacterChange: (String) -> Unit,
+    onPositionChange: (StagePosition) -> Unit,
+    onStartTimeChange: (Float) -> Unit,
+    onCancel: () -> Unit,
+    onAdd: () -> Unit
+) {
+    var expandedCharacter by remember { mutableStateOf(false) }
+    var touchPosition by remember { mutableStateOf(selectedPosition) }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                "새 이동 추가",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold
+            )
+
+            // 캐릭터 선택
+            ExposedDropdownMenuBox(
+                expanded = expandedCharacter,
+                onExpandedChange = { expandedCharacter = it }
             ) {
-                items(beat.movementLayer.movements.sortedBy { it.startTime }) { movement ->
-                    val character = characters.find { it.id == movement.characterId }
-                    MovementItemCard(
-                        movement = movement,
-                        characterName = character?.name ?: "Unknown",
-                        onRemove = { onRemoveMovement(movement.id) }
+                OutlinedTextField(
+                    value = characters.find { it.id == selectedCharacterId }?.name ?: "선택",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("캐릭터") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCharacter) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedCharacter,
+                    onDismissRequest = { expandedCharacter = false }
+                ) {
+                    characters.forEach { character ->
+                        DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        if (character.gender == CharacterGender.MALE) "♂" else "♀",
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(character.name)
+                                }
+                            },
+                            onClick = {
+                                onCharacterChange(character.id)
+                                expandedCharacter = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // 위치 선택 (미니맵)
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "위치 (터치하여 지정)",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                    Text(
+                        "${(touchPosition.x * 100).toInt()}%, ${(touchPosition.y * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // 미니맵
+                StageMiniMap(
+                    selectedPosition = touchPosition,
+                    backgroundLocation = backgroundLocation,
+                    onPositionChange = {
+                        touchPosition = it
+                        onPositionChange(it)
+                    }
+                )
+            }
+
+            // 시작 시간
+            Column {
+                Text(
+                    "시작 시간: ${String.format("%.1f", startTime)}초",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Slider(
+                    value = startTime,
+                    onValueChange = onStartTimeChange,
+                    valueRange = 0f..10f,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // 대사 타임라인 (참고용)
+            if (beat.dialogueLayer.dialogues.isNotEmpty()) {
+                DialogueTimeline(
+                    dialogues = beat.dialogueLayer.dialogues.sortedBy { it.startTime },
+                    totalDuration = beat.calculateDuration()
+                )
+            }
+
+            // 취소/추가 버튼
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onCancel,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("취소")
+                }
+
+                Button(
+                    onClick = onAdd,
+                    modifier = Modifier.weight(1f),
+                    enabled = selectedCharacterId.isNotEmpty()
+                ) {
+                    Text("추가")
                 }
             }
         }

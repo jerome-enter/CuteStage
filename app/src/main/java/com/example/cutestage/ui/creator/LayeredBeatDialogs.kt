@@ -512,7 +512,7 @@ fun AddMovementDialog(
  * 스테이지 미니맵 (터치로 위치 지정)
  */
 @Composable
-private fun StageMiniMap(
+internal fun StageMiniMap(
     selectedPosition: StagePosition,
     backgroundLocation: StageLocation = StageLocation.STAGE_FLOOR,
     onPositionChange: (StagePosition) -> Unit
@@ -523,40 +523,32 @@ private fun StageMiniMap(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(300.dp)  // StageView와 동일한 높이
+            .clip(RoundedCornerShape(8.dp))
             .border(
                 width = 2.dp,
                 color = MaterialTheme.colorScheme.outline,
                 shape = RoundedCornerShape(8.dp)
             )
-            .clip(RoundedCornerShape(8.dp))
-            .pointerInput(Unit) {
-                detectTapGestures { offset ->
-                    // 터치 위치를 0~1 범위로 정규화
-                    val x = (offset.x / size.width).coerceIn(0f, 1f)
-                    val y = (offset.y / size.height).coerceIn(0f, 1f)
-                    val newPosition = StagePosition(x, y)
-                    localPosition = newPosition
-                    onPositionChange(newPosition)
-                }
-            }
     ) {
         // 배경 이미지
         androidx.compose.foundation.Image(
             painter = androidx.compose.ui.res.painterResource(backgroundLocation.backgroundRes),
             contentDescription = "Stage Background",
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            contentScale = androidx.compose.ui.layout.ContentScale.Fit,  // Fit으로 전체 이미지 표시
+            modifier = Modifier.fillMaxSize()
+        )
+        
+        // 반투명 오버레이
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .alpha(0.6f), // 약간 투명하게
-            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                Color.White.copy(alpha = 0.3f),
-                androidx.compose.ui.graphics.BlendMode.DstOver
-            )
+                .background(Color.Black.copy(alpha = 0.3f))
         )
+        
         // 배경 격자
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val gridColor = Color.Gray.copy(alpha = 0.2f)
+            val gridColor = Color.Gray.copy(alpha = 0.3f)
             // 수직선 (3등분)
             for (i in 1..2) {
                 val x = size.width * i / 3
@@ -579,65 +571,41 @@ private fun StageMiniMap(
             }
         }
 
-        // 위치 가이드 텍스트
-        Text(
-            "뒤쪽",
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(4.dp)
-        )
-        Text(
-            "앞쪽",
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(4.dp)
-        )
-        Text(
-            "좌",
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(4.dp)
-        )
-        Text(
-            "우",
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray,
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(4.dp)
-        )
-
-        // 선택된 위치 표시
-        Box(
-            modifier = Modifier
-                .offset(
-                    x = (localPosition.x * 100).dp * 2.5f - 20.dp,
-                    y = (localPosition.y * 100).dp * 1.8f - 20.dp
-                )
-                .size(40.dp)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                    shape = CircleShape
-                )
-                .border(
-                    width = 3.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                "📍",
-                style = MaterialTheme.typography.titleLarge
+        // 선택된 위치 표시 (핀)
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val pinX = size.width * localPosition.x
+            val pinY = size.height * localPosition.y
+            
+            // 핀 원
+            drawCircle(
+                color = Color(0xFF6200EE),
+                radius = 20.dp.toPx(),
+                center = Offset(pinX, pinY),
+                alpha = 0.7f
+            )
+            // 핀 중심점
+            drawCircle(
+                color = Color.White,
+                radius = 8.dp.toPx(),
+                center = Offset(pinX, pinY)
             )
         }
-
+        
+        // 터치 인식 레이어 (최상단)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        // 터치 위치를 0~1 범위로 정규화
+                        val x = (offset.x / size.width).coerceIn(0f, 1f)
+                        val y = (offset.y / size.height).coerceIn(0f, 1f)
+                        val newPosition = StagePosition(x, y)
+                        localPosition = newPosition
+                        onPositionChange(newPosition)
+                    }
+                }
+        )
     }
 }
 
