@@ -538,7 +538,7 @@ internal fun StageMiniMap(
         androidx.compose.foundation.Image(
             painter = androidx.compose.ui.res.painterResource(backgroundLocation.backgroundRes),
             contentDescription = "Stage Background",
-            contentScale = androidx.compose.ui.layout.ContentScale.Fit,  // Fit으로 전체 이미지 표시
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,  // ✅ StageView와 동일하게 Crop 사용
             modifier = Modifier.fillMaxSize()
         )
         

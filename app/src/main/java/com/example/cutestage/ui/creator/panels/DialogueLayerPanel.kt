@@ -46,7 +46,7 @@ fun DialogueLayerPanel(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(0.dp),
+        contentPadding = PaddingValues(top = 16.dp),  // ✅ 상단 여백 추가
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // 타임라인 시각화
