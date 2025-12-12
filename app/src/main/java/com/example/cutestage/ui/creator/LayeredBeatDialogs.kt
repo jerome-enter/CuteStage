@@ -525,8 +525,7 @@ internal fun StageMiniMap(
 
     Box(
         modifier = Modifier
-            .padding(horizontal = 10.dp)  // StageView와 동일한 패딩
-            .fillMaxWidth()
+            .fillMaxWidth()  // ✅ 패딩 제거 - 부모에서 처리
             .height(300.dp)  // StageView와 동일한 높이
             .clip(RoundedCornerShape(16.dp))  // StageView와 동일한 radius
             .border(

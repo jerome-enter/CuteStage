@@ -697,8 +697,8 @@ private fun DialogueLayerPanel(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(8.dp),  // 16dp → 8dp로 줄임
+        verticalArrangement = Arrangement.spacedBy(8.dp)  // 12dp → 8dp로 줄임
     ) {
         // 타임라인 시각화
         if (beat.dialogueLayer.dialogues.isNotEmpty()) {
@@ -788,23 +788,18 @@ private fun InlineDialogueEditor(
     // 예상 재생 시간 계산
     val estimatedDuration = ((dialogueText.length * 0.15f + 1f) / 1.3f).coerceAtLeast(1.2f)
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    // Surface 제거 - 흰색 배경 활용
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp),  // StageView와 동일한 좌우 패딩만
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // LazyColumn 안에 있으므로 verticalScroll 제거
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                "새 대사 추가",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
-            )
+        Text(
+            "새 대사 추가",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
 
             // 캐릭터 선택
             ExposedDropdownMenuBox(
@@ -1042,8 +1037,7 @@ private fun InlineDialogueEditor(
                 }
             }
         }
-    }
-}
+    }  // Column 닫기 - Surface 제거로 괄호 하나 줄임
 
 /**
  * 대사 타임라인 시각화
@@ -1243,8 +1237,8 @@ private fun MovementLayerPanel(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(8.dp),  // 16dp → 8dp로 줄임
+        verticalArrangement = Arrangement.spacedBy(8.dp)  // 12dp → 8dp로 줄임
     ) {
         // 이동 목록
         items(
@@ -1326,22 +1320,18 @@ private fun InlineMovementEditor(
     var expandedCharacter by remember { mutableStateOf(false) }
     var touchPosition by remember { mutableStateOf(selectedPosition) }
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    // Surface 제거 - 흰색 배경 활용
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp),  // StageView와 동일한 좌우 패딩만
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),  // 16dp → 12dp로 줄임
-            verticalArrangement = Arrangement.spacedBy(8.dp)  // 12dp → 8dp로 줄임
-        ) {
-            Text(
-                "새 이동 추가",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
-            )
+        Text(
+            "새 이동 추가",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
 
             // 캐릭터 선택
             ExposedDropdownMenuBox(
@@ -1463,8 +1453,7 @@ private fun InlineMovementEditor(
                 }
             }
         }
-    }
-}
+    }  // Column 닫기 - Surface 제거로 괄호 하나 줄임
 
 @Composable
 private fun MovementItemCard(
