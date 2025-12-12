@@ -5,6 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,8 +16,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.cutestage.R
 import kotlinx.coroutines.delay
@@ -72,14 +77,16 @@ internal fun StageViewContent(
         state.currentScript?.scenes?.getOrNull(state.playbackState.currentSceneIndex)
     }
 
-    Box(
-        modifier = modifier
-            .padding(10.dp)
-            .fillMaxWidth()
-            .height(300.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.Black)
-    ) {
+    Column(modifier = modifier) {
+        // 무대 영역
+        Box(
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()
+                .height(300.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.Black)
+        ) {
         // 무대 배경
         key(state.playbackState.currentSceneIndex) {
             StageBackground(
@@ -164,23 +171,7 @@ internal fun StageViewContent(
             }
         }
 
-        // UI 컨트롤들
-        StageControls(
-            isPlaying = state.playbackState.isPlaying,
-            playbackSpeed = state.playbackState.speed,
-            currentScript = state.currentScript,
-            currentSceneIndex = state.playbackState.currentSceneIndex,
-            onPlaybackSpeedChange = { speed ->
-                onEvent(StageEvent.ChangePlaybackSpeed(speed))
-            },
-            onStopPlaying = { onEvent(StageEvent.Stop) },
-            onScenarioSelected = { scenario, script, shouldPlay ->
-                onEvent(StageEvent.LoadScenario(scenario, script, shouldPlay))
-            },
-            onShowAIDialog = { onEvent(StageEvent.ShowAIDialog) },
-            onPlay = { onEvent(StageEvent.Play) },
-            onScenarioSelectClick = onScenarioSelectClick
-        )
+        // (UI 컨트롤들은 하단 패널로 이동)
 
         // 선택지 UI
         if (state.playbackState.isPlaying &&
@@ -195,6 +186,17 @@ internal fun StageViewContent(
                 modifier = Modifier.align(Alignment.Center)
             )
         }
+    }
+
+        // 하단 컨트롤 패널
+        StageControlPanel(
+            state = state,
+            onEvent = onEvent,
+            onScenarioSelectClick = onScenarioSelectClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 
     // 재생 시작 시 상호작용 초기화
@@ -288,5 +290,270 @@ private fun StageBackground(
                 .fillMaxSize()
                 .background(color = Color.Black),
         )
+    }
+}
+
+/**
+ * 하단 컨트롤 패널
+ * 왼쪽: 속도 조절, 중앙: 씬 번호, 오른쪽: 재생/목록/음성
+ */
+@Composable
+private fun StageControlPanel(
+    state: StageState,
+    onEvent: (StageEvent) -> Unit,
+    onScenarioSelectClick: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(8.dp),
+        tonalElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 왼쪽: 재생 속도 조절
+            SpeedControl(
+                speed = state.playbackState.speed,
+                onSpeedChange = { speed -> onEvent(StageEvent.ChangePlaybackSpeed(speed)) }
+            )
+
+            // 중앙: 씬 번호
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                SceneIndicator(
+                    currentScene = state.playbackState.currentSceneIndex + 1,
+                    totalScenes = state.currentScript?.scenes?.size ?: 1
+                )
+            }
+
+            // 오른쪽: 컨트롤 버튼들
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 음성 엔진 설정
+                VoiceEngineButton()
+
+                // 목록 이동 버튼 (있을 때만)
+                if (onScenarioSelectClick != null) {
+                    IconButton(
+                        onClick = onScenarioSelectClick,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.List,
+                            contentDescription = "목록",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                // 재생/정지 버튼 (2/3 크기, 흰색 배경, 검정 아이콘)
+                FilledIconButton(
+                    onClick = {
+                        if (state.playbackState.isPlaying) {
+                            onEvent(StageEvent.Stop)
+                        } else {
+                            onEvent(StageEvent.Play)
+                        }
+                    },
+                    modifier = Modifier.size(28.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = Color.White,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (state.playbackState.isPlaying)
+                            Icons.Filled.Close
+                        else
+                            Icons.Filled.PlayArrow,
+                        contentDescription = if (state.playbackState.isPlaying) "정지" else "재생",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Black
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 재생 속도 조절 버튼 (작고 컴팩트하게)
+ */
+@Composable
+private fun SpeedControl(
+    speed: Float,
+    onSpeedChange: (Float) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val speeds = listOf(1f, 1.5f, 2f)
+        speeds.forEach { s ->
+            val isSelected = speed == s
+            FilterChip(
+                selected = isSelected,
+                onClick = { onSpeedChange(s) },
+                label = {
+                    Text(
+                        text = "${s}x",
+                        fontSize = 10.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            Color.DarkGray
+                    )
+                },
+                modifier = Modifier
+                    .height(26.dp)
+                    .defaultMinSize(minWidth = 1.dp),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = isSelected,
+                    borderColor = MaterialTheme.colorScheme.outline,
+                    selectedBorderColor = MaterialTheme.colorScheme.outline,
+                    borderWidth = 1.dp,
+                    selectedBorderWidth = 1.dp
+                ),
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                )
+            )
+        }
+    }
+}
+
+/**
+ * 음성 엔진 설정 버튼
+ */
+@Composable
+private fun VoiceEngineButton() {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Box {
+        IconButton(
+            onClick = { showMenu = true },
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "음성 엔진",
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            val currentEngine = VoiceSoundManagerFactory.currentEngineType
+
+            VoiceEngineMenuItem(
+                text = "부드러운 소리 (기본)",
+                engineType = VoiceSoundType.AUDIO_TRACK,
+                currentEngine = currentEngine,
+                onSelect = {
+                    showMenu = false
+                    VoiceSoundManagerFactory.currentEngineType = VoiceSoundType.AUDIO_TRACK
+                }
+            )
+
+            VoiceEngineMenuItem(
+                text = "레트로 비프음",
+                engineType = VoiceSoundType.TONE_GENERATOR,
+                currentEngine = currentEngine,
+                onSelect = {
+                    showMenu = false
+                    VoiceSoundManagerFactory.currentEngineType = VoiceSoundType.TONE_GENERATOR
+                }
+            )
+
+            VoiceEngineMenuItem(
+                text = "동물의 숲 스타일 🎮",
+                engineType = VoiceSoundType.ANIMAL_VOICE,
+                currentEngine = currentEngine,
+                onSelect = {
+                    showMenu = false
+                    VoiceSoundManagerFactory.currentEngineType = VoiceSoundType.ANIMAL_VOICE
+                }
+            )
+        }
+    }
+}
+
+/**
+ * 음성 엔진 메뉴 아이템
+ */
+@Composable
+private fun VoiceEngineMenuItem(
+    text: String,
+    engineType: VoiceSoundType,
+    currentEngine: VoiceSoundType,
+    onSelect: () -> Unit
+) {
+    DropdownMenuItem(
+        text = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (currentEngine == engineType) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Spacer(modifier = Modifier.size(16.dp))
+                }
+                Text(text)
+            }
+        },
+        onClick = onSelect
+    )
+}
+
+/**
+ * 씬 번호 표시 (Scenes 레이블 포함, 작은 텍스트)
+ */
+@Composable
+private fun SceneIndicator(
+    currentScene: Int,
+    totalScenes: Int
+) {
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = "Scenes",
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+            )
+            Text(
+                text = "$currentScene/$totalScenes",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
     }
 }
