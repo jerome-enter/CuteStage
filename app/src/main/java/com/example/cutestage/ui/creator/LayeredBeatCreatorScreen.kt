@@ -1,5 +1,8 @@
 package com.example.cutestage.ui.creator
 
+import com.example.cutestage.ui.creator.panels.LocationLayerPanel
+import com.example.cutestage.ui.creator.panels.DialogueLayerPanel
+import com.example.cutestage.ui.creator.panels.MovementLayerPanel
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
