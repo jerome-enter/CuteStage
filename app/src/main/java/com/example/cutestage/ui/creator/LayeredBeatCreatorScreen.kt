@@ -697,16 +697,18 @@ private fun DialogueLayerPanel(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(8.dp),  // 16dp → 8dp로 줄임
-        verticalArrangement = Arrangement.spacedBy(8.dp)  // 12dp → 8dp로 줄임
+        contentPadding = PaddingValues(0.dp),  // ✅ 패딩 제거 - 개별 아이템에서 처리
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // 타임라인 시각화
         if (beat.dialogueLayer.dialogues.isNotEmpty()) {
             item {
-                DialogueTimeline(
-                    dialogues = beat.dialogueLayer.dialogues.sortedBy { it.startTime },
-                    totalDuration = beat.calculateDuration()
-                )
+                Box(modifier = Modifier.padding(horizontal = 10.dp)) {
+                    DialogueTimeline(
+                        dialogues = beat.dialogueLayer.dialogues.sortedBy { it.startTime },
+                        totalDuration = beat.calculateDuration()
+                    )
+                }
             }
         }
 
@@ -727,7 +729,9 @@ private fun DialogueLayerPanel(
                 // [+ 대사 추가] 버튼
                 Button(
                     onClick = { isEditing = true },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp)  // ✅ 좌우 패딩 추가
                 ) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -1157,7 +1161,9 @@ private fun DialogueItemCard(
     val endTime = dialogue.startTime + duration
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp),  // ✅ 좌우 패딩 추가
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
@@ -1237,8 +1243,8 @@ private fun MovementLayerPanel(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(8.dp),  // 16dp → 8dp로 줄임
-        verticalArrangement = Arrangement.spacedBy(8.dp)  // 12dp → 8dp로 줄임
+        contentPadding = PaddingValues(0.dp),  // ✅ 패딩 제거 - Column에서 개별 처리
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // 이동 목록
         items(
@@ -1259,7 +1265,9 @@ private fun MovementLayerPanel(
                 // [+ 이동 추가] 버튼
                 Button(
                     onClick = { isEditing = true },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp)  // ✅ 좌우 패딩 추가
                 ) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -1462,7 +1470,9 @@ private fun MovementItemCard(
     onRemove: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp),  // ✅ 좌우 패딩 추가
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
         )
