@@ -3,6 +3,7 @@ package com.example.cutestage.data
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.example.cutestage.data.character.*
 import com.example.cutestage.data.module.*
 import com.example.cutestage.data.scenario.*
 
@@ -20,9 +21,10 @@ import com.example.cutestage.data.scenario.*
         ModuleItemEntity::class,
         UnlockedModuleEntity::class,
         ScenarioEntity::class,
-        TimelineItemEntity::class
+        TimelineItemEntity::class,
+        CharacterLibraryEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(ModuleConverters::class)
@@ -30,6 +32,7 @@ abstract class CuteStageDatabase : RoomDatabase() {
 
     abstract fun moduleDao(): ModuleDao
     abstract fun scenarioDao(): ScenarioDao
+    abstract fun characterLibraryDao(): CharacterLibraryDao
 
     companion object {
         const val DATABASE_NAME = "cutestage_db"

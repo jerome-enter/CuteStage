@@ -120,7 +120,7 @@ fun BeatCreatorScreen(
 
         // 캐릭터 추가 다이얼로그
         if (state.showAddCharacterDialog) {
-            AddCharacterDialog(
+            BeatCreatorAddCharacterDialog(
                 onDismiss = { viewModel.dismissAddCharacterDialog() },
                 onAdd = { name, gender -> viewModel.addCharacter(name, gender) }
             )
@@ -553,10 +553,10 @@ private fun BeatTemplateCard(
 }
 
 /**
- * 캐릭터 추가 다이얼로그
+ * 캐릭터 추가 다이얼로그 (Beat Creator용)
  */
 @Composable
-private fun AddCharacterDialog(
+private fun BeatCreatorAddCharacterDialog(
     onDismiss: () -> Unit,
     onAdd: (String, CharacterGender) -> Unit
 ) {

@@ -68,7 +68,10 @@ class TimelineToScriptConverter @Inject constructor(
             val gson = com.google.gson.Gson()
             val beatData = gson.fromJson(descriptionJson, Map::class.java) as Map<*, *>
 
-            if (beatData["type"] != "beat") {
+            val type = beatData["type"] as? String
+
+            // 기존 Beat 또는 새로운 LayeredBeat 둘 다 지원
+            if (type != "beat" && type != "layered_beat") {
                 return null
             }
 
@@ -78,6 +81,7 @@ class TimelineToScriptConverter @Inject constructor(
             // Beat 리스트를 TheaterScript로 변환
             com.example.cutestage.stage.beat.BeatConverter.beatsToTheaterScript(beats)
         } catch (e: Exception) {
+            e.printStackTrace() // 디버깅을 위해 에러 출력
             null
         }
     }

@@ -42,6 +42,10 @@ sealed class Screen(val route: String) {
         fun createRoute(): String = "beat_creator"
     }
 
+    object LayeredBeatCreator : Screen("layered_beat_creator") {
+        fun createRoute(): String = "layered_beat_creator"
+    }
+
     object Player : Screen("player/{scenarioId}") {
         fun createRoute(scenarioId: String): String = "player/$scenarioId"
     }
@@ -89,8 +93,8 @@ fun CuteStageNavigation(
                     navController.navigate(Screen.ScenarioCreator.createRoute(scenarioId))
                 },
                 onCreateNew = {
-                    // Beat Creator로 이동
-                    navController.navigate(Screen.BeatCreator.createRoute())
+                    // 레이어 기반 Beat Creator로 이동 (새로운 방식)
+                    navController.navigate(Screen.LayeredBeatCreator.createRoute())
                 },
                 onNavigateBack = {
                     navController.popBackStack()
@@ -98,9 +102,18 @@ fun CuteStageNavigation(
             )
         }
 
-        // Beat 기반 시나리오 생성 화면
+        // Beat 기반 시나리오 생성 화면 (기존)
         composable(Screen.BeatCreator.route) {
             com.example.cutestage.ui.creator.BeatCreatorScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // 레이어 기반 Beat 시나리오 생성 화면 (새로운 방식)
+        composable(Screen.LayeredBeatCreator.route) {
+            com.example.cutestage.ui.creator.LayeredBeatCreatorScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

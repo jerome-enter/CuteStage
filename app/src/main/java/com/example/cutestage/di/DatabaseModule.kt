@@ -3,6 +3,7 @@ package com.example.cutestage.di
 import android.content.Context
 import androidx.room.Room
 import com.example.cutestage.data.CuteStageDatabase
+import com.example.cutestage.data.character.CharacterLibraryDao
 import com.example.cutestage.data.module.ModuleDao
 import com.example.cutestage.data.scenario.ScenarioDao
 import dagger.Module
@@ -43,5 +44,11 @@ object DatabaseModule {
     @Singleton
     fun provideScenarioDao(database: CuteStageDatabase): ScenarioDao {
         return database.scenarioDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCharacterLibraryDao(database: CuteStageDatabase): CharacterLibraryDao {
+        return database.characterLibraryDao()
     }
 }
