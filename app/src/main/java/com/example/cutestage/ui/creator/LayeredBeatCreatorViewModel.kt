@@ -481,6 +481,59 @@ class LayeredBeatCreatorViewModel @Inject constructor(
         }
     }
 
+    // ==================== 시나리오 로드 (편집 모드) ====================
+
+    fun loadScenario(scenarioId: String) {
+        viewModelScope.launch {
+            try {
+                val scenario = scenarioRepository.getScenarioById(scenarioId) ?: return@launch
+
+                // description에서 Beat 데이터 파싱
+                val beatDataMap = try {
+                    com.google.gson.Gson().fromJson(
+                        scenario.description,
+                        Map::class.java
+                    ) as? Map<String, Any>
+                } catch (e: Exception) {
+                    null
+                }
+
+                if (beatDataMap == null || beatDataMap["type"] != "layered_beat") {
+                    state = state.copy(errorMessage = "레이어 기반 시나리오가 아닙니다")
+                    return@launch
+                }
+
+                // 캐릭터 복원
+                val charactersJson = beatDataMap["characters"] as? String ?: "[]"
+                val characters = try {
+                    com.google.gson.Gson().fromJson(
+                        charactersJson,
+                        Array<CharacterInfo>::class.java
+                    ).toList()
+                } catch (e: Exception) {
+                    emptyList()
+                }
+
+                // Beat 복원
+                val beatsJson = beatDataMap["beats"] as? String ?: "[]"
+                val classicBeats = BeatJsonHelper.toBeatList(beatsJson)
+                val layeredBeats = LayeredBeatConverter.fromClassicBeats(classicBeats, characters)
+
+                // State 업데이트
+                state = state.copy(
+                    characters = characters,
+                    beats = layeredBeats,
+                    saveDialogTitle = scenario.title,
+                    saveDialogDescription = beatDataMap["description"] as? String ?: "",
+                    selectedBeatIndex = if (layeredBeats.isNotEmpty()) 0 else null
+                )
+
+            } catch (e: Exception) {
+                state = state.copy(errorMessage = "시나리오 로드 중 오류: ${e.message}")
+            }
+        }
+    }
+
     // ==================== 에러 관리 ====================
 
     fun clearError() {

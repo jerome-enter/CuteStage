@@ -330,7 +330,7 @@ private fun ScenarioCard(
                             onDismissRequest = { showMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("✏️ 편집") },
+                                text = { Text("편집") },
                                 onClick = {
                                     showMenu = false
                                     onEditClick()
@@ -340,7 +340,7 @@ private fun ScenarioCard(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("🗑️ 삭제") },
+                                text = { Text("삭제") },
                                 onClick = {
                                     showMenu = false
                                     onDeleteClick()

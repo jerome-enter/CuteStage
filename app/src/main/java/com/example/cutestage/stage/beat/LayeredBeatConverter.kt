@@ -176,4 +176,199 @@ object LayeredBeatConverter {
     ): List<Beat> {
         return layeredBeats.map { toClassicBeat(it, allCharacters) }
     }
+
+    /**
+     * Beat를 LayeredBeat로 역변환 (편집 모드용)
+     */
+    fun fromClassicBeat(beat: Beat, allCharacters: List<CharacterInfo>): LayeredBeat {
+        // 1. Location Layer 복원
+        val locationLayer = LocationLayer(
+            location = StageLocation.STAGE_FLOOR // 기본값, 추후 확장 가능
+        )
+
+        // 2. Dialogue Layer 복원
+        val dialogues = beat.layers.dialogues.map { dialogueAction ->
+            val character = allCharacters.find { it.id == dialogueAction.characterId }
+            DialogueEntry(
+                characterId = dialogueAction.characterId,
+                characterName = character?.name ?: "Unknown",
+                text = dialogueAction.text,
+                emotion = dialogueAction.emotion.toDialogueEmotion(),
+                startTime = dialogueAction.delay,
+                action = null // 기존 Beat에는 action 정보가 없음
+            )
+        }
+        val dialogueLayer = DialogueLayer(dialogues = dialogues)
+
+        // 3. Movement Layer 복원
+        val movements = beat.layers.characters.flatMap { characterAction ->
+            val movementList = mutableListOf<MovementEntry>()
+
+            when (characterAction.movement.type) {
+                MovementType.STAY -> {
+                    // 한 위치에 머무름
+                    characterAction.movement.from?.let { from ->
+                        movementList.add(
+                            MovementEntry(
+                                characterId = characterAction.characterId,
+                                position = from.toStagePosition(),
+                                startTime = 0f,
+                                autoWalk = false
+                            )
+                        )
+                    }
+                }
+
+                MovementType.MOVE -> {
+                    // 이동
+                    characterAction.movement.from?.let { from ->
+                        movementList.add(
+                            MovementEntry(
+                                characterId = characterAction.characterId,
+                                position = from.toStagePosition(),
+                                startTime = 0f,
+                                autoWalk = false
+                            )
+                        )
+                    }
+                    characterAction.movement.to?.let { to ->
+                        movementList.add(
+                            MovementEntry(
+                                characterId = characterAction.characterId,
+                                position = to.toStagePosition(),
+                                startTime = beat.duration / 2, // 중간에 이동
+                                autoWalk = true
+                            )
+                        )
+                    }
+                }
+
+                MovementType.ENTER -> {
+                    // 입장
+                    characterAction.movement.to?.let { to ->
+                        movementList.add(
+                            MovementEntry(
+                                characterId = characterAction.characterId,
+                                position = to.toStagePosition(),
+                                startTime = 0f,
+                                autoWalk = true
+                            )
+                        )
+                    }
+                }
+
+                MovementType.EXIT -> {
+                    // 퇴장
+                    characterAction.movement.from?.let { from ->
+                        movementList.add(
+                            MovementEntry(
+                                characterId = characterAction.characterId,
+                                position = from.toStagePosition(),
+                                startTime = beat.duration * 0.7f, // 후반에 퇴장
+                                autoWalk = true
+                            )
+                        )
+                    }
+                }
+
+                MovementType.APPROACH, MovementType.RETREAT -> {
+                    // 접근/후퇴는 MOVE와 동일하게 처리
+                    characterAction.movement.from?.let { from ->
+                        movementList.add(
+                            MovementEntry(
+                                characterId = characterAction.characterId,
+                                position = from.toStagePosition(),
+                                startTime = 0f,
+                                autoWalk = false
+                            )
+                        )
+                    }
+                    characterAction.movement.to?.let { to ->
+                        movementList.add(
+                            MovementEntry(
+                                characterId = characterAction.characterId,
+                                position = to.toStagePosition(),
+                                startTime = beat.duration / 2,
+                                autoWalk = true
+                            )
+                        )
+                    }
+                }
+            }
+            movementList
+        }
+        val movementLayer = MovementLayer(movements = movements)
+
+        // 4. Action Layer 복원 (제스처가 있는 경우)
+        val actions = beat.layers.characters.mapNotNull { characterAction ->
+            characterAction.gesture?.let { gesture ->
+                ActionEntry(
+                    characterId = characterAction.characterId,
+                    actionType = gesture.type.toStageActionType()
+                )
+            }
+        }
+        val actionLayer = ActionLayer(actions = actions)
+
+        return LayeredBeat(
+            id = beat.id,
+            name = beat.name,
+            duration = beat.duration,
+            locationLayer = locationLayer,
+            dialogueLayer = dialogueLayer,
+            actionLayer = actionLayer,
+            movementLayer = movementLayer
+        )
+    }
+
+    /**
+     * Beat 리스트를 LayeredBeat 리스트로 역변환
+     */
+    fun fromClassicBeats(beats: List<Beat>, allCharacters: List<CharacterInfo>): List<LayeredBeat> {
+        return beats.map { fromClassicBeat(it, allCharacters) }
+    }
+
+    /**
+     * Position을 StagePosition으로 변환
+     */
+    private fun Position.toStagePosition(): StagePosition {
+        return StagePosition(x = this.x, y = this.y)
+    }
+
+    /**
+     * EmotionType을 DialogueEmotion으로 변환
+     */
+    private fun EmotionType.toDialogueEmotion(): DialogueEmotion {
+        return when (this) {
+            EmotionType.NEUTRAL -> DialogueEmotion.CALM
+            EmotionType.HAPPY -> DialogueEmotion.HAPPY
+            EmotionType.SAD -> DialogueEmotion.SAD
+            EmotionType.ANGRY -> DialogueEmotion.ANGRY
+            EmotionType.SURPRISED -> DialogueEmotion.SURPRISED
+            EmotionType.SCARED -> DialogueEmotion.FEARFUL
+            EmotionType.EXCITED -> DialogueEmotion.EXCITED
+            EmotionType.NERVOUS -> DialogueEmotion.NERVOUS
+            EmotionType.SHY -> DialogueEmotion.SHY
+            EmotionType.CONFUSED, EmotionType.ANNOYED, EmotionType.DISGUSTED -> DialogueEmotion.ANNOYED
+        }
+    }
+
+    /**
+     * GestureType을 StageActionType으로 변환
+     */
+    private fun GestureType.toStageActionType(): StageActionType {
+        return when (this) {
+            GestureType.WAVE -> StageActionType.WAVE
+            GestureType.CLAP -> StageActionType.CLAP
+            GestureType.BOW -> StageActionType.BOW
+            GestureType.SIT -> StageActionType.BOW // 매핑 없음
+            GestureType.STAND -> StageActionType.WAVE // 매핑 없음
+            GestureType.DANCE -> StageActionType.WAVE // 매핑 없음
+            GestureType.SING -> StageActionType.WAVE // 매핑 없음
+            GestureType.POINT -> StageActionType.WAVE // 매핑 없음
+            GestureType.HUG -> StageActionType.WAVE // 매핑 없음
+            GestureType.PUSH -> StageActionType.WAVE // 매핑 없음
+            GestureType.PULL -> StageActionType.WAVE // 매핑 없음
+        }
+    }
 }

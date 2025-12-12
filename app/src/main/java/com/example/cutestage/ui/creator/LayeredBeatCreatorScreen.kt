@@ -46,10 +46,18 @@ import com.example.cutestage.stage.beat.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LayeredBeatCreatorScreen(
+    scenarioId: String? = null,
     onNavigateBack: () -> Unit,
     viewModel: LayeredBeatCreatorViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
+
+    // scenarioId가 있으면 편집 모드로 시나리오 로드
+    LaunchedEffect(scenarioId) {
+        if (scenarioId != null) {
+            viewModel.loadScenario(scenarioId)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -1325,8 +1333,8 @@ private fun InlineMovementEditor(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(12.dp),  // 16dp → 12dp로 줄임
+            verticalArrangement = Arrangement.spacedBy(8.dp)  // 12dp → 8dp로 줄임
         ) {
             Text(
                 "새 이동 추가",
@@ -1395,7 +1403,7 @@ private fun InlineMovementEditor(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))  // 6dp → 4dp로 줄임
 
                 // 미니맵
                 StageMiniMap(
@@ -1416,7 +1424,7 @@ private fun InlineMovementEditor(
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))  // 6dp → 4dp로 줄임
 
                 Slider(
                     value = startTime,

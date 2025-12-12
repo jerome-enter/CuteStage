@@ -42,8 +42,14 @@ sealed class Screen(val route: String) {
         fun createRoute(): String = "beat_creator"
     }
 
-    object LayeredBeatCreator : Screen("layered_beat_creator") {
-        fun createRoute(): String = "layered_beat_creator"
+    object LayeredBeatCreator : Screen("layered_beat_creator?scenarioId={scenarioId}") {
+        fun createRoute(scenarioId: String? = null): String {
+            return if (scenarioId != null) {
+                "layered_beat_creator?scenarioId=$scenarioId"
+            } else {
+                "layered_beat_creator"
+            }
+        }
     }
 
     object Player : Screen("player/{scenarioId}") {
@@ -90,7 +96,8 @@ fun CuteStageNavigation(
                     }
                 },
                 onEditClick = { scenarioId ->
-                    navController.navigate(Screen.ScenarioCreator.createRoute(scenarioId))
+                    // 레이어 기반 크리에이터로 편집
+                    navController.navigate(Screen.LayeredBeatCreator.createRoute(scenarioId))
                 },
                 onCreateNew = {
                     // 레이어 기반 Beat Creator로 이동 (새로운 방식)
@@ -111,9 +118,20 @@ fun CuteStageNavigation(
             )
         }
 
-        // 레이어 기반 Beat 시나리오 생성 화면 (새로운 방식)
-        composable(Screen.LayeredBeatCreator.route) {
+        // 레이어 기반 Beat 시나리오 생성/편집 화면 (새로운 방식)
+        composable(
+            route = Screen.LayeredBeatCreator.route,
+            arguments = listOf(
+                navArgument("scenarioId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val scenarioId = backStackEntry.arguments?.getString("scenarioId")
             com.example.cutestage.ui.creator.LayeredBeatCreatorScreen(
+                scenarioId = scenarioId,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

@@ -510,6 +510,9 @@ fun AddMovementDialog(
 
 /**
  * 스테이지 미니맵 (터치로 위치 지정)
+ * StageView와 동일한 크기:
+ * - width: fillMaxWidth - 20.dp (좌우 패딩 10dp씩)
+ * - height: 300.dp
  */
 @Composable
 internal fun StageMiniMap(
@@ -522,13 +525,14 @@ internal fun StageMiniMap(
 
     Box(
         modifier = Modifier
+            .padding(horizontal = 10.dp)  // StageView와 동일한 패딩
             .fillMaxWidth()
             .height(300.dp)  // StageView와 동일한 높이
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(16.dp))  // StageView와 동일한 radius
             .border(
                 width = 2.dp,
                 color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(16.dp)
             )
     ) {
         // 배경 이미지
