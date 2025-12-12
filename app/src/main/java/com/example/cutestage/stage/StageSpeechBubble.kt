@@ -35,17 +35,10 @@ internal fun AnimatedSpeechBubble(
     // 말풍선 등장 애니메이션 시간
     val bubbleAnimationDuration = 200
 
-    // 타이핑 완료 시간 계산 (글자 수 * 타이핑 속도)
-    val typingDuration = dialogue.text.length * dialogue.typingSpeedMs
-
     LaunchedEffect(sceneIndex, playbackSpeed) {
         // 지연 시간 대기 후 말풍선과 타자기를 동시에 시작 (재생 속도에 따라 조정, 안전한 계산)
         delay(calculateSafeDelay(dialogue.delayMillis, playbackSpeed))
         visible = true
-
-        // 타이핑 완료 후 말풍선 사라짐
-        delay(calculateSafeDelay(typingDuration + 500, playbackSpeed)) // 타이핑 + 0.5초 여유
-        visible = false
     }
 
     AnimatedVisibility(
