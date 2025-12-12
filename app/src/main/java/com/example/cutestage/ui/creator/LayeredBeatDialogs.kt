@@ -517,6 +517,7 @@ fun AddMovementDialog(
 @Composable
 internal fun StageMiniMap(
     selectedPosition: StagePosition,
+    characterName: String? = null,  // ✅ 선택된 캐릭터 이름
     backgroundLocation: StageLocation = StageLocation.STAGE_FLOOR,
     onPositionChange: (StagePosition) -> Unit
 ) {
@@ -574,24 +575,64 @@ internal fun StageMiniMap(
             }
         }
 
-        // 선택된 위치 표시 (핀)
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val pinX = size.width * localPosition.x
-            val pinY = size.height * localPosition.y
-            
-            // 핀 원
-            drawCircle(
-                color = Color(0xFF6200EE),
-                radius = 20.dp.toPx(),
-                center = Offset(pinX, pinY),
-                alpha = 0.7f
-            )
-            // 핀 중심점
-            drawCircle(
-                color = Color.White,
-                radius = 8.dp.toPx(),
-                center = Offset(pinX, pinY)
-            )
+        // 선택된 위치 표시 (이름 버블 + 핀)
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val pinX = localPosition.x
+            val pinY = localPosition.y
+            val boxWidth = constraints.maxWidth.toFloat()
+            val boxHeight = constraints.maxHeight.toFloat()
+
+            // Column으로 이름과 핀을 수직 배치
+            Column(
+                modifier = Modifier
+                    .offset {
+                        androidx.compose.ui.unit.IntOffset(
+                            x = (pinX * boxWidth).toInt(),
+                            y = (pinY * boxHeight).toInt()
+                        )
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // 1. 캐릭터 이름 버블 (위)
+                if (characterName != null) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        shadowElevation = 4.dp,
+                        modifier = Modifier.offset(y = (-50).dp)  // 전체를 위로
+                    ) {
+                        Text(
+                            text = characterName,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                // 2. 핀 (아래)
+                Canvas(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .offset(y = (-50).dp)  // 전체를 위로
+                ) {
+                    // 핀 원
+                    drawCircle(
+                        color = Color(0xFF6200EE),
+                        radius = 20.dp.toPx(),
+                        center = Offset(size.width / 2, size.height / 2),
+                        alpha = 0.7f
+                    )
+                    // 핀 중심점
+                    drawCircle(
+                        color = Color.White,
+                        radius = 8.dp.toPx(),
+                        center = Offset(size.width / 2, size.height / 2)
+                    )
+                }
+            }
         }
         
         // 터치 인식 레이어 (최상단)

@@ -258,6 +258,7 @@ fun InlineMovementEditor(
             // 미니맵
             StageMiniMap(
                 selectedPosition = touchPosition,
+                characterName = characters.find { it.id == selectedCharacterId }?.name,
                 backgroundLocation = backgroundLocation,
                 onPositionChange = {
                     touchPosition = it
