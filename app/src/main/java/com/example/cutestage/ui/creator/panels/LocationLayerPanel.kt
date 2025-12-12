@@ -34,9 +34,16 @@ fun LocationLayerPanel(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Spacer(modifier = Modifier.height(16.dp))  // ✅ 상단 여백 추가
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // 장소 선택 가로 스크롤
+        // 선택된 장소 미리보기 (위로 이동)
+        LocationPreview(
+            location = beat.locationLayer.location
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 장소 선택 가로 스크롤 (아래로 이동)
         Text(
             "장소 선택",
             style = MaterialTheme.typography.titleSmall,
@@ -46,7 +53,7 @@ fun LocationLayerPanel(
 
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(StageLocation.values().toList()) { location ->
                 LocationCard(
@@ -56,13 +63,6 @@ fun LocationLayerPanel(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 선택된 장소 미리보기
-        LocationPreview(
-            location = beat.locationLayer.location
-        )
     }
 }
 
@@ -88,7 +88,7 @@ private fun LocationPreview(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .height(200.dp),  // ✅ StageView와 동일한 높이 유지
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -103,7 +103,7 @@ private fun LocationPreview(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // 하단 정보 오버레이
+                // 하단 정보 오버레이 (70% 크기)
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -111,24 +111,24 @@ private fun LocationPreview(
                     color = Color.Black.copy(alpha = 0.7f)
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(8.dp),  // ✅ 16 → 8dp (50%)
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)  // ✅ 12 → 6dp (50%)
                     ) {
                         Text(
                             text = location.emoji,
-                            style = MaterialTheme.typography.displaySmall
+                            style = MaterialTheme.typography.headlineSmall  // ✅ displaySmall → headlineSmall (작게)
                         )
-                        Column {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
                                 text = location.displayName,
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleSmall,  // ✅ titleLarge → titleSmall (작게)
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
                                 text = "현재 비트의 배경으로 설정됨",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.labelSmall,  // ✅ bodySmall → labelSmall (더 작게)
                                 color = Color.White.copy(alpha = 0.7f)
                             )
                         }
@@ -147,8 +147,8 @@ private fun LocationCard(
 ) {
     Card(
         modifier = Modifier
-            .width(120.dp)  // ✅ 가로 스크롤용 고정 너비
-            .height(100.dp)
+            .width(120.dp)  // ✅ 원래 크기 유지
+            .height(100.dp)  // ✅ 원래 크기 유지
             .clickable(onClick = onClick)
             .then(
                 if (isSelected) Modifier.border(
@@ -174,12 +174,12 @@ private fun LocationCard(
         ) {
             Text(
                 text = location.emoji,
-                style = MaterialTheme.typography.displaySmall
+                style = MaterialTheme.typography.displaySmall  // ✅ 원래 크기 유지
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = location.displayName,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall,  // ✅ 원래 크기 유지
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )

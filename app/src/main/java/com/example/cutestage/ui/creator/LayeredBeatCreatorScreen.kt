@@ -79,11 +79,15 @@ fun LayeredBeatCreatorScreen(
                 },
                 actions = {
                     // 저장 버튼
-                    IconButton(
+                    TextButton(
                         onClick = { viewModel.showSaveDialog() },
                         enabled = state.beats.isNotEmpty()
                     ) {
-                        Icon(Icons.Default.Check, "저장")
+                        Text(
+                            "저장",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -198,10 +202,20 @@ fun LayeredBeatCreatorScreen(
                 onDescriptionChange = { viewModel.updateSaveDialogDescription(it) },
                 onDismiss = { viewModel.dismissSaveDialog() },
                 onSave = {
-                    viewModel.saveScenario { _ ->
+                    // 새로저장 (신규 ID로 저장)
+                    viewModel.saveScenario(overwrite = false) { _ ->
                         onNavigateBack()
                     }
                 },
+                onOverwrite = if (scenarioId != null) {
+                    {
+                        // 덮어쓰기 (기존 ID로 업데이트)
+                        viewModel.saveScenario(overwrite = true) { _ ->
+                            onNavigateBack()
+                        }
+                    }
+                } else null,
+                isEditMode = scenarioId != null,
                 isSaving = state.isSaving
             )
         }

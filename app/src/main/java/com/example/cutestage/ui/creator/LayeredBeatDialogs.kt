@@ -773,6 +773,9 @@ private fun CharacterLibraryItem(
 
 /**
  * 저장 다이얼로그
+ * @param isEditMode 편집 모드인지 여부 (true면 덮어쓰기/새로저장, false면 저장만)
+ * @param onOverwrite 덮어쓰기 (편집 모드만)
+ * @param onSaveAsNew 새로저장 (편집 모드에서는 별도 저장, 신규 모드에서는 기본 저장)
  */
 @Composable
 fun SaveLayeredBeatScenarioDialog(
@@ -783,6 +786,8 @@ fun SaveLayeredBeatScenarioDialog(
     onDescriptionChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
+    onOverwrite: (() -> Unit)? = null,
+    isEditMode: Boolean = false,
     isSaving: Boolean
 ) {
     AlertDialog(
@@ -816,17 +821,43 @@ fun SaveLayeredBeatScenarioDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = onSave,
-                enabled = !isSaving && title.isNotBlank()
-            ) {
-                if (isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("저장")
+            if (isEditMode && onOverwrite != null) {
+                // 편집 모드: 덮어쓰기 + 새로저장
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = onOverwrite,
+                        enabled = !isSaving && title.isNotBlank()
+                    ) {
+                        if (isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("덮어쓰기")
+                        }
+                    }
+                    Button(
+                        onClick = onSave,
+                        enabled = !isSaving && title.isNotBlank()
+                    ) {
+                        Text("새로저장")
+                    }
+                }
+            } else {
+                // 신규 모드: 저장만
+                Button(
+                    onClick = onSave,
+                    enabled = !isSaving && title.isNotBlank()
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("저장")
+                    }
                 }
             }
         },

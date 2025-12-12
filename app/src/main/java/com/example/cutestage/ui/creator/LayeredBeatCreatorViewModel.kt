@@ -25,6 +25,9 @@ class LayeredBeatCreatorViewModel @Inject constructor(
     var state by mutableStateOf(LayeredBeatCreatorState())
         private set
 
+    // 편집 모드에서 로드된 시나리오 ID (덮어쓰기 용)
+    private var loadedScenarioId: String? = null
+
     init {
         // 캐릭터 라이브러리 로드
         viewModelScope.launch {
@@ -250,7 +253,7 @@ class LayeredBeatCreatorViewModel @Inject constructor(
 
         // 기존 대사들의 총 재생 시간 계산 (자동 타이밍)
         val previousDialogues = beat.dialogueLayer.dialogues
-        val autoStartTime = previousDialogues.sumOf { it.calculateDuration().toDouble() }.toFloat()
+        val autoStartTime = if (previousDialogues.isEmpty()) { 0.5f } else { previousDialogues.sumOf { it.calculateDuration().toDouble() + 0.5 }.toFloat() }
 
         val newDialogue = DialogueEntry(
             characterId = characterId,
@@ -422,7 +425,7 @@ class LayeredBeatCreatorViewModel @Inject constructor(
         state = state.copy(saveDialogDescription = description)
     }
 
-    fun saveScenario(onSuccess: (String) -> Unit) {
+    fun saveScenario(overwrite: Boolean = false, onSuccess: (String) -> Unit) {
         val title = state.saveDialogTitle.trim()
         if (title.isEmpty()) {
             state = state.copy(errorMessage = "제목을 입력해주세요")
@@ -453,7 +456,13 @@ class LayeredBeatCreatorViewModel @Inject constructor(
                 )
                 val descriptionWithBeatData = com.google.gson.Gson().toJson(beatData)
 
-                val scenarioId = UUID.randomUUID().toString()
+                // 덮어쓰기면 기존 ID 사용, 새로저장이면 새 ID 생성
+                val scenarioId = if (overwrite && loadedScenarioId != null) {
+                    loadedScenarioId!!
+                } else {
+                    UUID.randomUUID().toString()
+                }
+
                 val scenario = com.example.cutestage.data.scenario.ScenarioEntity(
                     id = scenarioId,
                     title = title,
@@ -484,6 +493,9 @@ class LayeredBeatCreatorViewModel @Inject constructor(
     // ==================== 시나리오 로드 (편집 모드) ====================
 
     fun loadScenario(scenarioId: String) {
+        // 편집 모드이므로 시나리오 ID 저장 (덮어쓰기 용)
+        loadedScenarioId = scenarioId
+
         viewModelScope.launch {
             try {
                 val scenario = scenarioRepository.getScenarioById(scenarioId) ?: return@launch
