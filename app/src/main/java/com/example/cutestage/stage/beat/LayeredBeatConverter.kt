@@ -22,7 +22,7 @@ object LayeredBeatConverter {
         layeredBeat.movementLayer.movements
             .sortedBy { it.startTime }
             .forEach { movement ->
-                val position = movement.position.toPosition()
+                val position = movement.toPosition.toPosition()
                 characterPositions[movement.characterId] = position
             }
 
@@ -71,18 +71,24 @@ object LayeredBeatConverter {
                 )
             } else if (movements.size == 1) {
                 // 한 곳에만 있음
+                val pos = movements[0].toPosition.toPosition()
                 Movement(
                     type = MovementType.STAY,
-                    from = movements[0].position.toPosition(),
-                    to = movements[0].position.toPosition(),
+                    from = pos,
+                    to = pos,
                     speed = Speed.NORMAL
                 )
             } else {
-                // 이동함
+                // 여러 이동 - 첫 위치에서 마지막 위치로
+                val firstMovement = movements.first()
+                val lastMovement = movements.last()
+                val from = firstMovement.getActualFromPosition(null).toPosition()
+                val to = lastMovement.toPosition.toPosition()
+
                 Movement(
                     type = MovementType.MOVE,
-                    from = movements[0].position.toPosition(),
-                    to = movements.last().position.toPosition(),
+                    from = from,
+                    to = to,
                     speed = Speed.NORMAL
                 )
             }
@@ -100,8 +106,8 @@ object LayeredBeatConverter {
 
             // 방향 결정 (이동 방향 기반)
             val facingDirection = if (movements.size >= 2) {
-                val from = movements[0].position
-                val to = movements[1].position
+                val from = movements[0].getActualFromPosition(null)
+                val to = movements[1].toPosition
                 when {
                     to.x > from.x -> Direction.RIGHT
                     to.x < from.x -> Direction.LEFT
@@ -211,8 +217,9 @@ object LayeredBeatConverter {
                         movementList.add(
                             MovementEntry(
                                 characterId = characterAction.characterId,
-                                position = from.toStagePosition(),
+                                toPosition = from.toStagePosition(),
                                 startTime = 0f,
+                                endTime = 0f,
                                 autoWalk = false
                             )
                         )
@@ -221,22 +228,16 @@ object LayeredBeatConverter {
 
                 MovementType.MOVE -> {
                     // 이동
-                    characterAction.movement.from?.let { from ->
+                    val fromPos = characterAction.movement.from?.toStagePosition()
+                    val toPos = characterAction.movement.to?.toStagePosition()
+                    if (fromPos != null && toPos != null) {
                         movementList.add(
                             MovementEntry(
                                 characterId = characterAction.characterId,
-                                position = from.toStagePosition(),
+                                fromPosition = fromPos,
+                                toPosition = toPos,
                                 startTime = 0f,
-                                autoWalk = false
-                            )
-                        )
-                    }
-                    characterAction.movement.to?.let { to ->
-                        movementList.add(
-                            MovementEntry(
-                                characterId = characterAction.characterId,
-                                position = to.toStagePosition(),
-                                startTime = beat.duration / 2, // 중간에 이동
+                                endTime = beat.duration / 2, // 중간에 도착
                                 autoWalk = true
                             )
                         )
@@ -249,8 +250,9 @@ object LayeredBeatConverter {
                         movementList.add(
                             MovementEntry(
                                 characterId = characterAction.characterId,
-                                position = to.toStagePosition(),
+                                toPosition = to.toStagePosition(),
                                 startTime = 0f,
+                                endTime = 1f,
                                 autoWalk = true
                             )
                         )
@@ -260,11 +262,14 @@ object LayeredBeatConverter {
                 MovementType.EXIT -> {
                     // 퇴장
                     characterAction.movement.from?.let { from ->
+                        val exitStart = beat.duration * 0.7f
                         movementList.add(
                             MovementEntry(
                                 characterId = characterAction.characterId,
-                                position = from.toStagePosition(),
-                                startTime = beat.duration * 0.7f, // 후반에 퇴장
+                                fromPosition = from.toStagePosition(),
+                                toPosition = from.toStagePosition(), // 같은 위치에서 시작
+                                startTime = exitStart,
+                                endTime = exitStart + 1f,
                                 autoWalk = true
                             )
                         )
@@ -273,22 +278,16 @@ object LayeredBeatConverter {
 
                 MovementType.APPROACH, MovementType.RETREAT -> {
                     // 접근/후퇴는 MOVE와 동일하게 처리
-                    characterAction.movement.from?.let { from ->
+                    val fromPos = characterAction.movement.from?.toStagePosition()
+                    val toPos = characterAction.movement.to?.toStagePosition()
+                    if (fromPos != null && toPos != null) {
                         movementList.add(
                             MovementEntry(
                                 characterId = characterAction.characterId,
-                                position = from.toStagePosition(),
+                                fromPosition = fromPos,
+                                toPosition = toPos,
                                 startTime = 0f,
-                                autoWalk = false
-                            )
-                        )
-                    }
-                    characterAction.movement.to?.let { to ->
-                        movementList.add(
-                            MovementEntry(
-                                characterId = characterAction.characterId,
-                                position = to.toStagePosition(),
-                                startTime = beat.duration / 2,
+                                endTime = beat.duration / 2,
                                 autoWalk = true
                             )
                         )

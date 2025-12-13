@@ -218,11 +218,25 @@ data class MovementLayer(
 data class MovementEntry(
     val id: String = java.util.UUID.randomUUID().toString(),
     val characterId: String,
-    val position: StagePosition, // 무대 상 위치
-    val startTime: Float = 0f, // 이 시점에 해당 위치에 있어야 함
+    val fromPosition: StagePosition? = null, // 시작 위치 (null이면 이전 위치 또는 기본값)
+    val toPosition: StagePosition, // 목표 위치
+    val startTime: Float = 0f, // 이동 시작 시간
+    val endTime: Float = 1f, // 이동 끝 시간 (도착 시간)
     val autoWalk: Boolean = true, // 자동으로 WALKING 애니메이션 삽입
     val linkedDialogueId: String? = null // 특정 대사 시점과 연결
-)
+) {
+    /**
+     * 이동 소요 시간
+     */
+    fun duration(): Float = endTime - startTime
+
+    /**
+     * 실제 시작 위치 계산 (자동 추론)
+     */
+    fun getActualFromPosition(previousPosition: StagePosition?): StagePosition {
+        return fromPosition ?: previousPosition ?: StagePosition.CENTER
+    }
+}
 
 /**
  * 무대 위치 (정규화된 좌표)

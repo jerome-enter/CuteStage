@@ -27,13 +27,16 @@ fun MovementLayerPanel(
     beatIndex: Int,
     characters: List<CharacterInfo>,
     backgroundLocation: StageLocation,
-    onAddMovement: (String, StagePosition, Float) -> Unit,
+    onAddMovement: (String, StagePosition?, StagePosition, Float, Float) -> Unit, // fromPos, toPos, startTime, endTime
     onRemoveMovement: (String) -> Unit
 ) {
     var isEditing by remember { mutableStateOf(false) }
     var selectedCharacterId by remember { mutableStateOf("") }
-    var selectedPosition by remember { mutableStateOf(StagePosition.CENTER) }
+    var useManualStart by remember { mutableStateOf(false) }
+    var fromPosition by remember { mutableStateOf<StagePosition?>(null) }
+    var toPosition by remember { mutableStateOf(StagePosition.CENTER) }
     var startTime by remember { mutableStateOf(0f) }
+    var endTime by remember { mutableStateOf(1f) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -70,23 +73,42 @@ fun MovementLayerPanel(
                     characters = characters,
                     backgroundLocation = backgroundLocation,
                     selectedCharacterId = selectedCharacterId,
-                    selectedPosition = selectedPosition,
+                    useManualStart = useManualStart,
+                    fromPosition = fromPosition,
+                    toPosition = toPosition,
                     startTime = startTime,
+                    endTime = endTime,
                     onCharacterChange = { selectedCharacterId = it },
-                    onPositionChange = { selectedPosition = it },
+                    onManualStartChange = { useManualStart = it },
+                    onFromPositionChange = { fromPosition = it },
+                    onToPositionChange = { toPosition = it },
                     onStartTimeChange = { startTime = it },
+                    onEndTimeChange = { endTime = it },
                     onCancel = {
                         isEditing = false
                         selectedCharacterId = ""
-                        selectedPosition = StagePosition.CENTER
+                        useManualStart = false
+                        fromPosition = null
+                        toPosition = StagePosition.CENTER
                         startTime = 0f
+                        endTime = 1f
                     },
                     onAdd = {
                         if (selectedCharacterId.isNotEmpty()) {
-                            onAddMovement(selectedCharacterId, selectedPosition, startTime)
+                            val actualFrom = if (useManualStart) fromPosition else null
+                            onAddMovement(
+                                selectedCharacterId,
+                                actualFrom,
+                                toPosition,
+                                startTime,
+                                endTime
+                            )
                             selectedCharacterId = ""
-                            selectedPosition = StagePosition.CENTER
+                            useManualStart = false
+                            fromPosition = null
+                            toPosition = StagePosition.CENTER
                             startTime = 0f
+                            endTime = 1f
                             isEditing = false
                         }
                     }
@@ -124,19 +146,26 @@ fun MovementItemCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "${movement.startTime}초",
+                        "${movement.startTime}~${movement.endTime}초",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "위치: (${(movement.position.x * 100).toInt()}%, ${(movement.position.y * 100).toInt()}%)",
+                    "목표: (${(movement.toPosition.x * 100).toInt()}%, ${(movement.toPosition.y * 100).toInt()}%)",
                     style = MaterialTheme.typography.bodySmall
                 )
+                if (movement.fromPosition != null) {
+                    Text(
+                        "시작: (${(movement.fromPosition!!.x * 100).toInt()}%, ${(movement.fromPosition!!.y * 100).toInt()}%)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                    )
+                }
                 if (movement.autoWalk) {
                     Text(
-                        "자동 걷기 애니메이션",
+                        "자동 걷기 애니메이션 · 소요 ${String.format("%.1f", movement.duration())}초",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                     )
@@ -170,16 +199,22 @@ fun InlineMovementEditor(
     characters: List<CharacterInfo>,
     backgroundLocation: StageLocation,
     selectedCharacterId: String,
-    selectedPosition: StagePosition,
+    useManualStart: Boolean,
+    fromPosition: StagePosition?,
+    toPosition: StagePosition,
     startTime: Float,
+    endTime: Float,
     onCharacterChange: (String) -> Unit,
-    onPositionChange: (StagePosition) -> Unit,
+    onManualStartChange: (Boolean) -> Unit,
+    onFromPositionChange: (StagePosition?) -> Unit,
+    onToPositionChange: (StagePosition) -> Unit,
     onStartTimeChange: (Float) -> Unit,
+    onEndTimeChange: (Float) -> Unit,
     onCancel: () -> Unit,
     onAdd: () -> Unit
 ) {
     var expandedCharacter by remember { mutableStateOf(false) }
-    var touchPosition by remember { mutableStateOf(selectedPosition) }
+    var touchPosition by remember { mutableStateOf(toPosition) }
 
     Column(
         modifier = Modifier
@@ -233,7 +268,22 @@ fun InlineMovementEditor(
             }
         }
 
-        // 위치 선택 (미니맵)
+        // 시작 위치 (선택적)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = useManualStart,
+                onCheckedChange = onManualStartChange
+            )
+            Text(
+                "시작 위치 수동 지정",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        // 목표 위치 선택 (미니맵)
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -241,7 +291,7 @@ fun InlineMovementEditor(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "위치 (터치하여 지정)",
+                    "목표 위치 (터치하여 지정)",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -262,12 +312,12 @@ fun InlineMovementEditor(
                 backgroundLocation = backgroundLocation,
                 onPositionChange = {
                     touchPosition = it
-                    onPositionChange(it)
+                    onToPositionChange(it)
                 }
             )
         }
 
-        // 시작 시간
+        // 시작/끝 시간
         Column {
             Text(
                 "시작 시간: ${String.format("%.1f", startTime)}초",
@@ -282,6 +332,29 @@ fun InlineMovementEditor(
                 onValueChange = onStartTimeChange,
                 valueRange = 0f..10f,
                 modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Column {
+            Text(
+                "끝 시간: ${String.format("%.1f", endTime)}초",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Slider(
+                value = endTime,
+                onValueChange = onEndTimeChange,
+                valueRange = startTime.coerceAtLeast(0.1f)..10f,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Text(
+                "이동 소요: ${String.format("%.1f", (endTime - startTime).coerceAtLeast(0f))}초",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
             )
         }
 

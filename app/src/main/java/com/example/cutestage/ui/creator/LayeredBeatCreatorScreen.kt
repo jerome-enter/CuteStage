@@ -104,12 +104,14 @@ fun LayeredBeatCreatorScreen(
             // 캐릭터 설정 (15%)
             CharacterSetupSection(
                 characters = state.characters,
+                isExpanded = state.isCharacterSectionExpanded,
+                onToggleExpand = { viewModel.toggleCharacterSection() },
                 onAddCharacter = { viewModel.showAddCharacterDialog() },
                 onShowLibrary = { viewModel.showCharacterLibraryDialog() },
                 onRemoveCharacter = { viewModel.removeCharacter(it) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.18f)
+                    .weight(if (state.isCharacterSectionExpanded) 0.18f else 0.08f)
             )
 
             Divider()
@@ -124,12 +126,14 @@ fun LayeredBeatCreatorScreen(
                 BeatTimelineSection(
                     beats = state.beats,
                     selectedIndex = state.selectedBeatIndex,
+                    isExpanded = state.isBeatTimelineSectionExpanded,
+                    onToggleExpand = { viewModel.toggleBeatTimelineSection() },
                     onSelectBeat = { viewModel.selectBeat(it) },
                     onAddBeat = { viewModel.createNewBeat() },
                     onRemoveBeat = { viewModel.removeBeat(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(0.25f)
+                        .weight(if (state.isBeatTimelineSectionExpanded) 0.25f else 0.08f)
                 )
 
                 Divider()
@@ -235,6 +239,8 @@ fun LayeredBeatCreatorScreen(
 @Composable
 private fun CharacterSetupSection(
     characters: List<CharacterInfo>,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
     onAddCharacter: () -> Unit,
     onShowLibrary: () -> Unit,
     onRemoveCharacter: (String) -> Unit,
@@ -253,34 +259,54 @@ private fun CharacterSetupSection(
                 .padding(12.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleExpand() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // 접기/펼치기 아이콘
+                Icon(
+                    imageVector = if (isExpanded)
+                        Icons.Default.KeyboardArrowDown
+                    else
+                        Icons.Default.KeyboardArrowUp,
+                    contentDescription = if (isExpanded) "접기" else "펼치기",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     "👥 등장인물",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                // 라이브러리 버튼
-                IconButton(
-                    onClick = onShowLibrary,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(Icons.Default.List, "라이브러리", tint = MaterialTheme.colorScheme.secondary)
-                }
-                // 추가 버튼
-                IconButton(
-                    onClick = onAddCharacter,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(Icons.Default.Add, "새로 만들기", tint = MaterialTheme.colorScheme.primary)
+                if (isExpanded) {
+                    // 라이브러리 버튼
+                    IconButton(
+                        onClick = onShowLibrary,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.List,
+                            "라이브러리",
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    // 추가 버튼
+                    IconButton(
+                        onClick = onAddCharacter,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(Icons.Default.Add, "새로 만들기", tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
-            if (characters.isEmpty()) {
+            if (isExpanded && characters.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -291,7 +317,7 @@ private fun CharacterSetupSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            } else {
+            } else if (isExpanded) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -355,6 +381,8 @@ private fun CharacterChip(
 private fun BeatTimelineSection(
     beats: List<LayeredBeat>,
     selectedIndex: Int?,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
     onSelectBeat: (Int) -> Unit,
     onAddBeat: () -> Unit,
     onRemoveBeat: (Int) -> Unit,
@@ -373,9 +401,21 @@ private fun BeatTimelineSection(
                 .padding(16.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleExpand() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // 접기/펼치기 아이콘
+                Icon(
+                    imageVector = if (isExpanded)
+                        Icons.Default.KeyboardArrowDown
+                    else
+                        Icons.Default.KeyboardArrowUp,
+                    contentDescription = if (isExpanded) "접기" else "펼치기",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     "🎬 비트 타임라인",
                     style = MaterialTheme.typography.titleMedium,
@@ -387,18 +427,22 @@ private fun BeatTimelineSection(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = onAddBeat,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(Icons.Default.Add, "비트 추가", tint = MaterialTheme.colorScheme.primary)
+                if (isExpanded) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = onAddBeat,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(Icons.Default.Add, "비트 추가", tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
-            if (beats.isEmpty()) {
+            if (isExpanded && beats.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -410,7 +454,7 @@ private fun BeatTimelineSection(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
-            } else {
+            } else if (isExpanded) {
                 // 가로 스크롤 타임라인
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -613,8 +657,14 @@ private fun LayerEditSection(
                     beatIndex = state.selectedBeatIndex,
                     characters = state.characters,
                     backgroundLocation = selectedBeat.locationLayer.location,
-                    onAddMovement = { charId, position, time ->
-                        viewModel.addMovementInline(state.selectedBeatIndex, charId, position, time)
+                    onAddMovement = { charId, fromPos, toPos, startT, endT ->
+                        viewModel.addMovementInline(
+                            state.selectedBeatIndex,
+                            charId,
+                            fromPos,
+                            toPos,
+                            startT,
+                            endT)
                     },
                     onRemoveMovement = { viewModel.removeMovement(state.selectedBeatIndex, it) }
                 )
@@ -1515,7 +1565,7 @@ private fun MovementItemCard(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "위치: (${(movement.position.x * 100).toInt()}%, ${(movement.position.y * 100).toInt()}%)",
+                    "목표: (${(movement.toPosition.x * 100).toInt()}%, ${(movement.toPosition.y * 100).toInt()}%)",
                     style = MaterialTheme.typography.bodySmall
                 )
                 if (movement.autoWalk) {

@@ -340,8 +340,10 @@ class LayeredBeatCreatorViewModel @Inject constructor(
 
         val newMovement = MovementEntry(
             characterId = editState.selectedCharacterId,
-            position = editState.position,
+            fromPosition = null, // 다이얼로그에서는 fromPosition 미지원 (향후 추가 가능)
+            toPosition = editState.position,
             startTime = editState.startTime,
+            endTime = editState.startTime + 1f, // 기본 1초 소요
             autoWalk = true
         )
 
@@ -366,18 +368,27 @@ class LayeredBeatCreatorViewModel @Inject constructor(
     fun addMovementInline(
         beatIndex: Int,
         characterId: String,
-        position: StagePosition,
-        startTime: Float
+        fromPosition: StagePosition?,
+        toPosition: StagePosition,
+        startTime: Float,
+        endTime: Float
     ) {
         if (characterId.isEmpty()) {
             state = state.copy(errorMessage = "캐릭터를 선택해주세요")
             return
         }
 
+        if (endTime <= startTime) {
+            state = state.copy(errorMessage = "끝 시간이 시작 시간보다 늦어야 합니다")
+            return
+        }
+
         val newMovement = MovementEntry(
             characterId = characterId,
-            position = position,
+            fromPosition = fromPosition,
+            toPosition = toPosition,
             startTime = startTime,
+            endTime = endTime,
             autoWalk = true
         )
 
@@ -551,6 +562,16 @@ class LayeredBeatCreatorViewModel @Inject constructor(
     fun clearError() {
         state = state.copy(errorMessage = null)
     }
+
+    // ==================== 섹션 접기/펼치기 ====================
+
+    fun toggleCharacterSection() {
+        state = state.copy(isCharacterSectionExpanded = !state.isCharacterSectionExpanded)
+    }
+
+    fun toggleBeatTimelineSection() {
+        state = state.copy(isBeatTimelineSectionExpanded = !state.isBeatTimelineSectionExpanded)
+    }
 }
 
 // ==================== State ====================
@@ -568,6 +589,10 @@ data class LayeredBeatCreatorState(
 
     // 레이어 탭
     val selectedLayerTab: LayerTab = LayerTab.LOCATION,
+
+    // 섹션 접기/펼치기
+    val isCharacterSectionExpanded: Boolean = true,
+    val isBeatTimelineSectionExpanded: Boolean = true,
 
     // 대사 편집
     val showAddDialogueDialog: Boolean = false,
