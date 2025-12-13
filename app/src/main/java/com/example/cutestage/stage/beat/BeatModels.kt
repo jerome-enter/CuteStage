@@ -278,6 +278,7 @@ enum class Direction {
  * 대사 액션
  */
 data class DialogueAction(
+    val id: String = java.util.UUID.randomUUID().toString(),  // 고유 식별자
     val characterId: String,
     val text: String,
     val emotion: EmotionType = EmotionType.NEUTRAL,
@@ -372,7 +373,9 @@ enum class SoundEffectType {
 // ==================== JSON 직렬화 헬퍼 ====================
 
 object BeatJsonHelper {
-    private val gson = Gson()
+    private val gson = com.google.gson.GsonBuilder()
+        .registerTypeAdapter(DialogueAction::class.java, DialogueActionDeserializer())
+        .create()
 
     fun toJson(beat: Beat): String {
         return gson.toJson(beat)
@@ -388,5 +391,39 @@ object BeatJsonHelper {
 
     fun fromBeatList(beats: List<Beat>): String {
         return gson.toJson(beats)
+    }
+}
+
+/**
+ * DialogueAction Deserializer - 레거시 JSON 호환성
+ * id 필드가 없는 기존 JSON도 처리 가능
+ */
+private class DialogueActionDeserializer : com.google.gson.JsonDeserializer<DialogueAction> {
+    override fun deserialize(
+        json: com.google.gson.JsonElement,
+        typeOfT: java.lang.reflect.Type,
+        context: com.google.gson.JsonDeserializationContext
+    ): DialogueAction {
+        val jsonObject = json.asJsonObject
+
+        // id가 없으면 UUID 생성 (레거시 호환성)
+        val id = if (jsonObject.has("id")) {
+            jsonObject.get("id").asString
+        } else {
+            java.util.UUID.randomUUID().toString()
+        }
+
+        return DialogueAction(
+            id = id,
+            characterId = jsonObject.get("characterId").asString,
+            text = jsonObject.get("text").asString,
+            emotion = context.deserialize(jsonObject.get("emotion"), EmotionType::class.java),
+            delay = jsonObject.get("delay").asFloat,
+            typingSpeed = if (jsonObject.has("typingSpeed")) {
+                jsonObject.get("typingSpeed").asLong
+            } else {
+                50L
+            }
+        )
     }
 }

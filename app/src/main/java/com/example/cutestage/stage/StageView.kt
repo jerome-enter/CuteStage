@@ -134,7 +134,7 @@ internal fun StageViewContent(
         // 말풍선들 (재생 중일 때만)
         if (state.playbackState.isPlaying) {
             currentScene?.dialogues?.forEachIndexed { index, dialogue ->
-                key(state.playbackState.currentSceneIndex, dialogue.text, index) {
+                key(state.playbackState.currentSceneIndex, dialogue.id) {  // dialogue.id 직접 사용
                     AnimatedSpeechBubble(
                         dialogue = dialogue,
                         sceneIndex = state.playbackState.currentSceneIndex,

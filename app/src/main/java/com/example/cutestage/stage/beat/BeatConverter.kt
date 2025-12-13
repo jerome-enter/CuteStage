@@ -170,6 +170,7 @@ object BeatConverter {
         }
 
         return DialogueState(
+            id = dialogue.id,  // DialogueAction의 ID 전달 (Deserializer에서 자동 생성됨)
             text = dialogue.text,
             position = position,
             speakerName = speaker?.name,

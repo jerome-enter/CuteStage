@@ -57,6 +57,7 @@ data class CharacterState(
  */
 @Immutable
 data class DialogueState(
+    val id: String = java.util.UUID.randomUUID().toString(),  // 고유 식별자
     val text: String,
     val position: DpOffset,
     val speakerName: String? = null,

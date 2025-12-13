@@ -35,15 +35,26 @@ internal fun AnimatedSpeechBubble(
         return
     }
 
-    var visible by remember(sceneIndex) { mutableStateOf(false) }
+    // dialogue.id를 key로 사용하여 각 대사마다 독립적인 상태 유지
+    var visible by remember(sceneIndex, dialogue.id) { mutableStateOf(false) }
 
     // 말풍선 등장 애니메이션 시간
     val bubbleAnimationDuration = 200
 
-    LaunchedEffect(sceneIndex, playbackSpeed) {
+    LaunchedEffect(sceneIndex, dialogue.id, playbackSpeed) {
         // 지연 시간 대기 후 말풍선과 타자기를 동시에 시작 (재생 속도에 따라 조정, 안전한 계산)
         delay(calculateSafeDelay(dialogue.delayMillis, playbackSpeed))
         visible = true
+
+        // 타이핑 시간 계산 (글자 수 × 타이핑 속도)
+        val typingDuration = (dialogue.text.length * dialogue.typingSpeedMs)
+        delay(calculateSafeDelay(typingDuration, playbackSpeed))
+
+        // 타이핑 완료 후 말풍선 표시 시간 (1.5초)
+        delay(calculateSafeDelay(1500, playbackSpeed))
+
+        // 말풍선 사라짐
+        visible = false
     }
 
     AnimatedVisibility(

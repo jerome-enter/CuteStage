@@ -131,6 +131,7 @@ object LayeredBeatConverter {
         // 5. DialogueAction 생성
         val dialogueActions = layeredBeat.dialogueLayer.dialogues.map { entry ->
             DialogueAction(
+                id = entry.id,  // DialogueEntry의 고유 ID 전달 (nullable)
                 characterId = entry.characterId,
                 text = entry.text,
                 emotion = entry.emotion.toEmotionType(),
