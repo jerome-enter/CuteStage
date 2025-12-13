@@ -30,6 +30,11 @@ internal fun AnimatedSpeechBubble(
     playbackSpeed: Float,
     modifier: Modifier = Modifier,
 ) {
+    // 빈 대사는 렌더링하지 않음 (음성 재생 방지)
+    if (dialogue.text.isBlank()) {
+        return
+    }
+
     var visible by remember(sceneIndex) { mutableStateOf(false) }
 
     // 말풍선 등장 애니메이션 시간
@@ -119,6 +124,12 @@ internal fun InteractionSpeechBubble(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // 빈 텍스트는 렌더링하지 않음 (음성 재생 방지)
+    if (text.isBlank()) {
+        onDismiss()
+        return
+    }
+
     // text가 변경되면 모든 상태 리셋
     var visible by remember(text) { mutableStateOf(false) }
     var startTyping by remember(text) { mutableStateOf(false) }

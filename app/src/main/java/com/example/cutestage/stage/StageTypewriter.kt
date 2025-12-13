@@ -28,6 +28,11 @@ internal fun TypewriterText(
     playbackSpeed: Float = 1.0f,
     notes: List<SongNote>? = null,
 ) {
+    // 빈 텍스트는 렌더링하지 않음 (음성 재생 방지)
+    if (text.isBlank()) {
+        return
+    }
+
     // sceneIndex가 변경되면 상태 리셋
     var visibleText by remember(sceneIndex, text) { mutableStateOf("") }
 

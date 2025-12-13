@@ -36,10 +36,12 @@ object BeatConverter {
             characterActionToCharacterState(action, beat.duration)
         }
 
-        // 대사 변환
-        val dialogues = layers.dialogues.map { dialogue ->
-            dialogueActionToDialogueState(dialogue, characters)
-        }
+        // 대사 변환 (빈 대사 제외)
+        val dialogues = layers.dialogues
+            .filter { it.text.isNotBlank() }  // 빈 대사 필터링
+            .map { dialogue ->
+                dialogueActionToDialogueState(dialogue, characters)
+            }
 
         // 배경 리소스 결정
         val backgroundRes = layers.background?.let {

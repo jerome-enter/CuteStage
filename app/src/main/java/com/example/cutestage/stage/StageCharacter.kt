@@ -97,7 +97,7 @@ internal fun AnimatedCharacter(
     }
 
     // 스프라이트 애니메이션 자동 재생 + 발걸음 소리
-    LaunchedEffect(character.spriteAnimation?.currentAnimation, playbackSpeed) {
+    LaunchedEffect(character.spriteAnimation?.currentAnimation, playbackSpeed, sceneIndex) {
         character.spriteAnimation?.let { spriteAnim ->
             if (spriteAnim.isAnimating) {
                 val isWalking = spriteAnim.currentAnimation == CharacterAnimationType.WALKING
@@ -106,8 +106,13 @@ internal fun AnimatedCharacter(
                     delay(calculateSafeDelay(spriteAnim.frameDuration, playbackSpeed))
                     currentFrame = if (currentFrame == 1) 2 else 1
 
-                    // 발걸음 소리 재생 (WALKING 애니메이션이고 프레임 1일 때만)
-                    if (isWalking && currentFrame == 1) {
+                    // 발걸음 소리 재생 조건:
+                    // 1. WALKING 애니메이션
+                    // 2. 프레임 1일 때만 (걸음마다 한 번)
+                    // 3. 재생 중(!isInteractive)
+                    // 4. 캐릭터에 음성이 있을 때만 (voice != null)
+                    //    → 대사가 없는 씬에서는 발걸음 소리도 없음
+                    if (isWalking && currentFrame == 1 && !isInteractive && character.voice != null) {
                         footstepSoundManager.playBeep(
                             pitch = 0.3f,
                             duration = 50,
