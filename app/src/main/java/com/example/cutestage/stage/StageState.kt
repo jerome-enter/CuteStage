@@ -13,6 +13,7 @@ data class StageState(
     val interactionState: InteractionState = InteractionState(),
     val choiceState: ChoiceState = ChoiceState(),
     val aiGenerationState: AIGenerationState = AIGenerationState(),
+    val showDebugPoints: Boolean = false,  // 디버그용 위치 점 표시
 )
 
 /**

@@ -106,14 +106,23 @@ data class Position(
     }
 
     /**
-     * Position을 화면 DP로 변환
+     * Position을 화면 DP로 변환 (바닥 중앙 → 왼쪽 위 변환)
+     *
+     * Position(x, y)는 캐릭터의 **바닥 중앙** 위치를 의미합니다.
+     * CharacterState.position은 **왼쪽 위** 위치를 사용하므로 변환이 필요합니다.
+     *
      * @param stageWidth 무대 전체 너비 (dp)
      * @param stageHeight 무대 전체 높이 (dp)
+     * @param characterSize 캐릭터 크기 (기본 80dp)
+     * @return 캐릭터의 왼쪽 위 좌표 (CharacterState.position용)
      */
-    fun toDp(stageWidth: Dp, stageHeight: Dp): Pair<Dp, Dp> {
+    fun toDp(stageWidth: Dp, stageHeight: Dp, characterSize: Dp = 80.dp): Pair<Dp, Dp> {
+        // 바닥 중앙 → 왼쪽 위 변환
+        // x: 중앙에서 캐릭터 너비의 절반만큼 왼쪽으로
+        // y: 바닥에서 캐릭터 높이만큼 위로
         return Pair(
-            stageWidth * x,
-            stageHeight * y
+            stageWidth * x - characterSize / 2,  // 중앙 정렬
+            stageHeight * y - characterSize       // 바닥 기준
         )
     }
 }

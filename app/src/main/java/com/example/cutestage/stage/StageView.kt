@@ -135,10 +135,16 @@ internal fun StageViewContent(
         if (state.playbackState.isPlaying) {
             currentScene?.dialogues?.forEachIndexed { index, dialogue ->
                 key(state.playbackState.currentSceneIndex, dialogue.id) {  // dialogue.id 직접 사용
+                    // 실시간 캐릭터 위치 추적을 위해 캐릭터 찾기
+                    val speakingCharacter = dialogue.speakerName?.let { name ->
+                        currentScene.characters.find { it.name == name }
+                    }
+
                     AnimatedSpeechBubble(
                         dialogue = dialogue,
                         sceneIndex = state.playbackState.currentSceneIndex,
                         playbackSpeed = state.playbackState.speed,
+                        character = speakingCharacter,  // 실시간 위치 추적용
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -169,6 +175,19 @@ internal fun StageViewContent(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
+        }
+
+        // 디버그 점 표시
+            if (state.showDebugPoints) {
+                DebugPointsOverlay(
+                    characters = currentScene?.characters ?: emptyList(),
+                    dialogues = if (state.playbackState.isPlaying) {
+                        currentScene?.dialogues ?: emptyList()
+                    } else {
+                        emptyList()
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
         }
 
         // (UI 컨트롤들은 하단 패널로 이동)
@@ -338,6 +357,22 @@ private fun StageControlPanel(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // 디버그 점 토글 버튼
+                IconButton(
+                    onClick = { onEvent(StageEvent.ToggleDebugPoints) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Build,
+                        contentDescription = "디버그 점",
+                        modifier = Modifier.size(18.dp),
+                        tint = if (state.showDebugPoints)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
                 // 음성 엔진 설정
                 VoiceEngineButton()
 

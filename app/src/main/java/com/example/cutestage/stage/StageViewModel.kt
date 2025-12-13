@@ -84,6 +84,9 @@ class StageViewModel @Inject constructor(
             is StageEvent.UpdateAIInput -> handleUpdateAIInput(event.input)
             is StageEvent.GenerateAIScenario -> handleGenerateAI()
 
+            // 디버그
+            is StageEvent.ToggleDebugPoints -> handleToggleDebugPoints()
+
             // 타임라인
             is StageEvent.AdvanceScene -> handleAdvanceScene()
             is StageEvent.ScriptEnded -> handleScriptEnded()
@@ -247,6 +250,12 @@ class StageViewModel @Inject constructor(
                 choices = choices
             )
         )
+    }
+
+    // ==================== 디버그 ====================
+
+    private fun handleToggleDebugPoints() {
+        state = state.copy(showDebugPoints = !state.showDebugPoints)
     }
 
     // ==================== AI 생성 ====================

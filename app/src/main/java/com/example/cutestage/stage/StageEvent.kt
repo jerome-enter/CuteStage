@@ -29,6 +29,9 @@ sealed class StageEvent {
     data class UpdateAIInput(val input: String) : StageEvent()
     object GenerateAIScenario : StageEvent()
 
+    // 디버그
+    object ToggleDebugPoints : StageEvent()
+
     // 타임라인 (내부 이벤트)
     object AdvanceScene : StageEvent()
     object ScriptEnded : StageEvent()

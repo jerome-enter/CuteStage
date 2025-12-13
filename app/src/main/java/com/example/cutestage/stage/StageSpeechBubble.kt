@@ -22,6 +22,8 @@ import kotlinx.coroutines.delay
  * 1. delayMillis 대기
  * 2. 말풍선과 타자기를 동시에 시작 (빈 말풍선 방지)
  * 3. 부드러운 페이드인 애니메이션
+ *
+ * @param character 실시간 캐릭터 위치 추적을 위한 캐릭터 상태 (null이면 dialogue.position 사용)
  */
 @Composable
 internal fun AnimatedSpeechBubble(
@@ -29,6 +31,7 @@ internal fun AnimatedSpeechBubble(
     sceneIndex: Int,
     playbackSpeed: Float,
     modifier: Modifier = Modifier,
+    character: CharacterState? = null,
 ) {
     // 빈 대사는 렌더링하지 않음 (음성 재생 방지)
     if (dialogue.text.isBlank()) {
@@ -74,15 +77,29 @@ internal fun AnimatedSpeechBubble(
                 .fillMaxSize()
                 .padding(10.dp), // 대화창이 StageView 경계에서 10dp 떨어지도록
         ) {
+            // 실시간 캐릭터 위치 기반 말풍선 위치 계산 (바닥 중앙 기준)
+            val bubbleX = if (character != null) {
+                // 캐릭터 바닥 중앙 (position.x + size/2)에서 말풍선 중앙 정렬
+                (character.position.x + character.size / 2 - 90.dp).coerceIn(0.dp, 280.dp - 180.dp)
+            } else {
+                // 캐릭터가 없으면 기존 방식 (고정 위치)
+                dialogue.position.x.coerceIn(0.dp, 280.dp - 180.dp)
+            }
+
+            val bubbleY = if (character != null) {
+                // 캐릭터 머리 위에 표시
+                60.dp
+            } else {
+                // 기존 방식
+                dialogue.position.y.coerceIn(0.dp, 280.dp - 100.dp)
+            }
+
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color.White, // 대화창 배경 흰색
                 shadowElevation = 4.dp,
                 modifier = Modifier
-                    .offset(
-                        x = dialogue.position.x.coerceIn(0.dp, 280.dp - 180.dp),
-                        y = dialogue.position.y.coerceIn(0.dp, 280.dp - 100.dp)
-                    )
+                    .offset(x = bubbleX, y = bubbleY)
                     .widthIn(max = 180.dp),
             ) {
                 Column(

@@ -159,11 +159,12 @@ object BeatConverter {
         // 대사를 하는 캐릭터 찾기
         val speaker = characters.find { it.id == dialogue.characterId }
 
-        // 말풍선 위치: 캐릭터 위쪽
+        // 말풍선 위치: 캐릭터 바닥 중앙 기준
         val position = if (speaker != null) {
+            // 바닥 중앙에서 계산 (position.x + size/2 = 바닥 중앙 X)
             androidx.compose.ui.unit.DpOffset(
-                x = speaker.position.x + 40.dp,
-                y = speaker.position.y - 60.dp
+                x = speaker.position.x + speaker.size / 2,
+                y = speaker.position.y - 60.dp  // 머리 위
             )
         } else {
             androidx.compose.ui.unit.DpOffset(180.dp, 100.dp)
