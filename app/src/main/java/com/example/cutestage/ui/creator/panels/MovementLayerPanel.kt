@@ -82,7 +82,13 @@ fun MovementLayerPanel(
                     onManualStartChange = { useManualStart = it },
                     onFromPositionChange = { fromPosition = it },
                     onToPositionChange = { toPosition = it },
-                    onStartTimeChange = { startTime = it },
+                    onStartTimeChange = { newStartTime ->
+                        startTime = newStartTime
+                        // 시작 시간이 끝 시간보다 뒤로 가면 끝 시간도 조정
+                        if (newStartTime > endTime) {
+                            endTime = newStartTime
+                        }
+                    },
                     onEndTimeChange = { endTime = it },
                     onCancel = {
                         isEditing = false
@@ -331,29 +337,35 @@ fun InlineMovementEditor(
 
             Slider(
                 value = startTime,
-                onValueChange = onStartTimeChange,
+                onValueChange = { newStartTime ->
+                    onStartTimeChange(newStartTime)
+                    // 시작 시간이 끝 시간보다 뒤로 가면 끝 시간을 시작 시간과 같게 조정
+                    if (newStartTime > endTime) {
+                        onEndTimeChange(newStartTime)
+                    }
+                },
                 valueRange = 0f..10f,
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
-        Column {
-            Text(
-                "끝 시간: ${String.format("%.1f", endTime)}초",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Column {
+                Text(
+                    "끝 시간: ${String.format("%.1f", endTime)}초",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
 
-            Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-            Slider(
-                value = endTime,
-                onValueChange = onEndTimeChange,
-                valueRange = startTime.coerceAtLeast(0.1f)..10f,
-                modifier = Modifier.fillMaxWidth()
-            )
+                Slider(
+                    value = endTime,
+                    onValueChange = onEndTimeChange,
+                    valueRange = startTime.coerceAtLeast(0.1f)..10f,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Text(
+                Text(
                 "이동 소요: ${String.format("%.1f", (endTime - startTime).coerceAtLeast(0f))}초",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
