@@ -268,7 +268,9 @@ fun InlineMovementEditor(
             }
         }
 
-        // 시작 위치 (선택적)
+        // 캐릭터가 선택되었을 때만 나머지 입력 필드 표시
+        if (selectedCharacterId.isNotEmpty()) {
+            // 시작 위치 (선택적)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -386,5 +388,6 @@ fun InlineMovementEditor(
                 Text("추가")
             }
         }
+        } // 캐릭터 선택 시에만 보이는 영역 끝
     }
 }
