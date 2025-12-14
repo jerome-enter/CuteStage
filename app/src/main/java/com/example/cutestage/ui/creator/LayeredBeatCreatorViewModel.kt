@@ -207,7 +207,12 @@ class LayeredBeatCreatorViewModel @Inject constructor(
 
         // 기존 대사들의 총 재생 시간 계산 (자동 타이밍)
         val previousDialogues = beat.dialogueLayer.dialogues
-        val autoStartTime = previousDialogues.sumOf { it.calculateDuration().toDouble() }.toFloat()
+        val autoStartTime = if (previousDialogues.isEmpty()) {
+            0.5f  // 첫 대사는 0.5초 후 시작
+        } else {
+            previousDialogues.sumOf { it.calculateDuration().toDouble() + 0.5 }
+                .toFloat()  // 각 대사 후 0.5초 여백
+        }
 
         val newDialogue = DialogueEntry(
             characterId = editState.selectedCharacterId,
@@ -371,7 +376,8 @@ class LayeredBeatCreatorViewModel @Inject constructor(
         fromPosition: StagePosition?,
         toPosition: StagePosition,
         startTime: Float,
-        endTime: Float
+        endTime: Float,
+        facingDirection: FacingDirection = FacingDirection.RIGHT
     ) {
         if (characterId.isEmpty()) {
             state = state.copy(errorMessage = "캐릭터를 선택해주세요")
@@ -389,7 +395,8 @@ class LayeredBeatCreatorViewModel @Inject constructor(
             toPosition = toPosition,
             startTime = startTime,
             endTime = endTime,
-            autoWalk = true
+            autoWalk = true,
+            facingDirection = facingDirection
         )
 
         val updatedBeats = state.beats.toMutableList()
@@ -451,21 +458,18 @@ class LayeredBeatCreatorViewModel @Inject constructor(
         state = state.copy(isSaving = true)
         viewModelScope.launch {
             try {
-                // LayeredBeat를 Beat로 변환
-                val classicBeats =
-                    LayeredBeatConverter.toClassicBeats(state.beats, state.characters)
-
-                // JSON으로 직렬화
-                val beatsJson = BeatJsonHelper.fromBeatList(classicBeats)
-                val charactersJson = com.google.gson.Gson().toJson(state.characters)
+                // ✅ LayeredBeat를 직접 JSON으로 직렬화 (Classic Beat 변환 없음!)
+                val gson = com.google.gson.Gson()
+                val layeredBeatsJson = gson.toJson(state.beats)
+                val charactersJson = gson.toJson(state.characters)
 
                 val beatData = mapOf(
-                    "type" to "layered_beat",
+                    "type" to "layered_beat_v2",  // ✅ 새 버전 표시
                     "description" to state.saveDialogDescription,
-                    "beats" to beatsJson,
+                    "layeredBeats" to layeredBeatsJson,  // ✅ LayeredBeat 직접 저장
                     "characters" to charactersJson
                 )
-                val descriptionWithBeatData = com.google.gson.Gson().toJson(beatData)
+                val descriptionWithBeatData = gson.toJson(beatData)
 
                 // 덮어쓰기면 기존 ID 사용, 새로저장이면 새 ID 생성
                 val scenarioId = if (overwrite && loadedScenarioId != null) {
@@ -512,8 +516,9 @@ class LayeredBeatCreatorViewModel @Inject constructor(
                 val scenario = scenarioRepository.getScenarioById(scenarioId) ?: return@launch
 
                 // description에서 Beat 데이터 파싱
+                val gson = com.google.gson.Gson()
                 val beatDataMap = try {
-                    com.google.gson.Gson().fromJson(
+                    gson.fromJson(
                         scenario.description,
                         Map::class.java
                     ) as? Map<String, Any>
@@ -521,15 +526,17 @@ class LayeredBeatCreatorViewModel @Inject constructor(
                     null
                 }
 
-                if (beatDataMap == null || beatDataMap["type"] != "layered_beat") {
-                    state = state.copy(errorMessage = "레이어 기반 시나리오가 아닙니다")
+                if (beatDataMap == null) {
+                    state = state.copy(errorMessage = "시나리오 데이터를 읽을 수 없습니다")
                     return@launch
                 }
+
+                val dataType = beatDataMap["type"] as? String
 
                 // 캐릭터 복원
                 val charactersJson = beatDataMap["characters"] as? String ?: "[]"
                 val characters = try {
-                    com.google.gson.Gson().fromJson(
+                    gson.fromJson(
                         charactersJson,
                         Array<CharacterInfo>::class.java
                     ).toList()
@@ -537,10 +544,44 @@ class LayeredBeatCreatorViewModel @Inject constructor(
                     emptyList()
                 }
 
-                // Beat 복원
-                val beatsJson = beatDataMap["beats"] as? String ?: "[]"
-                val classicBeats = BeatJsonHelper.toBeatList(beatsJson)
-                val layeredBeats = LayeredBeatConverter.fromClassicBeats(classicBeats, characters)
+                // Beat 복원 (버전에 따라 다르게 처리)
+                val layeredBeats: List<LayeredBeat> = when (dataType) {
+                    "layered_beat_v2" -> {
+                        // ✅ 새 버전: LayeredBeat 직접 로드
+                        val layeredBeatsJson = beatDataMap["layeredBeats"] as? String ?: "[]"
+                        println("Debug_Load v2 로드 중...")
+                        try {
+                            val result = gson.fromJson(
+                                layeredBeatsJson,
+                                Array<LayeredBeat>::class.java
+                            ).toList()
+                            println("Debug_Load v2 성공: ${result.size}개 비트")
+                            result.forEachIndexed { index, beat ->
+                                println("Debug_Load 비트[$index]: 이동 ${beat.movementLayer.movements.size}개, 대사 ${beat.dialogueLayer.dialogues.size}개")
+                            }
+                            result
+                        } catch (e: Exception) {
+                            println("Debug_Load v2 실패: ${e.message}")
+                            e.printStackTrace()
+                            state = state.copy(errorMessage = "v2 로드 실패: ${e.message}")
+                            return@launch
+                        }
+                    }
+
+                    "layered_beat" -> {
+                        // ❌ 구 버전: Classic Beat 경유 (데이터 손실 있음)
+                        println("Debug_Load v1 로드 (구버전)")
+                        val beatsJson = beatDataMap["beats"] as? String ?: "[]"
+                        val classicBeats = BeatJsonHelper.toBeatList(beatsJson)
+                        LayeredBeatConverter.fromClassicBeats(classicBeats, characters)
+                    }
+
+                    else -> {
+                        println("Debug_Load 알 수 없는 타입: $dataType")
+                        state = state.copy(errorMessage = "알 수 없는 시나리오 타입: $dataType")
+                        return@launch
+                    }
+                }
 
                 // State 업데이트
                 state = state.copy(

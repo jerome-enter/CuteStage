@@ -64,9 +64,10 @@ object BeatConverter {
         action: CharacterAction,
         beatDuration: Float
     ): CharacterState {
-        // 위치 계산 (무대 크기 기준)
-        val stageWidth = 360.dp
-        val stageHeight = 300.dp
+        // 위치는 비율 (0.0~1.0)로 저장하고, StageView에서 실제 크기로 변환
+        // 여기서는 임시로 고정 크기를 사용하지만, 실제로는 StageView에서 동적으로 계산해야 함
+        val stageWidth = 360.dp  // 기준 크기 (StageView에서 재계산됨)
+        val stageHeight = 300.dp  // 기준 크기 (StageView에서 재계산됨)
 
         val position = when (action.movement.type) {
             MovementType.ENTER -> {
@@ -96,6 +97,8 @@ object BeatConverter {
         }
 
         val (x, y) = position.toDp(stageWidth, stageHeight)
+
+        println("Debug_BeatConverter 위치 변환: ${action.characterName} position(${position.x}, ${position.y}) → ($x, $y) [기준: ${stageWidth}×${stageHeight}]")
 
         // 애니메이션 타입 결정
         val animationType = when {
@@ -168,6 +171,15 @@ object BeatConverter {
     ): DialogueState {
         // 대사를 하는 캐릭터 찾기
         val speaker = characters.find { it.id == dialogue.characterId }
+
+        // 디버그: characterId 매칭 확인
+        if (speaker == null) {
+            println("Debug_BeatConverter ⚠️ 캐릭터를 찾을 수 없음!")
+            println("Debug_BeatConverter   - dialogue.characterId: ${dialogue.characterId}")
+            println("Debug_BeatConverter   - 사용 가능한 캐릭터 IDs: ${characters.map { "${it.name}(${it.id})" }}")
+        } else {
+            println("Debug_BeatConverter ✅ 대사 캐릭터 매칭 성공: ${speaker.name}(${speaker.id})")
+        }
 
         // 말풍선 위치: 캐릭터 바닥 중앙 기준
         val position = if (speaker != null) {

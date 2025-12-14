@@ -215,6 +215,14 @@ data class MovementLayer(
     val movements: List<MovementEntry> = emptyList()
 )
 
+/**
+ * 바라보는 방향
+ */
+enum class FacingDirection {
+    LEFT,   // 왼쪽
+    RIGHT   // 오른쪽 (기본값)
+}
+
 data class MovementEntry(
     val id: String = java.util.UUID.randomUUID().toString(),
     val characterId: String,
@@ -223,7 +231,8 @@ data class MovementEntry(
     val startTime: Float = 0f, // 이동 시작 시간
     val endTime: Float = 1f, // 이동 끝 시간 (도착 시간)
     val autoWalk: Boolean = true, // 자동으로 WALKING 애니메이션 삽입
-    val linkedDialogueId: String? = null // 특정 대사 시점과 연결
+    val linkedDialogueId: String? = null, // 특정 대사 시점과 연결
+    val facingDirection: FacingDirection = FacingDirection.RIGHT // 바라보는 방향
 ) {
     /**
      * 이동 소요 시간

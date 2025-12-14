@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -79,6 +80,9 @@ internal fun StageViewContent(
 
     Column(modifier = modifier) {
         // 무대 영역
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        var actualStageSize by remember { mutableStateOf<androidx.compose.ui.unit.IntSize?>(null) }
+
         Box(
             modifier = Modifier
                 .padding(10.dp)
@@ -86,6 +90,14 @@ internal fun StageViewContent(
                 .height(300.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color.Black)
+                .onSizeChanged { size ->
+                    actualStageSize = size
+                    with(density) {
+                        val widthDp = size.width.toDp()
+                        val heightDp = size.height.toDp()
+                        println("Debug_StageView 실제 크기: width=${size.width}px (${widthDp}) height=${size.height}px (${heightDp})")
+                    }
+                }
         ) {
         // 무대 배경
         key(state.playbackState.currentSceneIndex) {
@@ -95,24 +107,51 @@ internal fun StageViewContent(
             )
         }
 
-        // 캐릭터들
-        currentScene?.characters?.forEach { character ->
-            val isInteracting = state.interactionState.characterId == character.id &&
-                    state.interactionState.dialogue != null
-            val interactionCharacter = if (isInteracting && character.spriteAnimation != null) {
-                val animationType = CharacterInteractionSystem.getAnimationForEmotion(
-                    state.interactionState.emotion
-                )
-                character.copy(
-                    position = DpOffset(character.position.x, character.position.y - 10.dp),
-                    scale = 1.15f,
-                    spriteAnimation = character.spriteAnimation.copy(
-                        currentAnimation = animationType,
-                        isAnimating = true,
-                    ),
-                )
-            } else {
-                character
+        // 캐릭터들 (실제 크기에 맞춰 스케일링)
+            currentScene?.characters?.forEach { character ->
+                // BeatConverter에서 360dp 기준으로 계산된 위치를 실제 크기로 스케일링
+                val scaledCharacter = if (actualStageSize != null) {
+                    with(density) {
+                        val actualWidthDp = actualStageSize!!.width.toDp()
+                        val actualHeightDp = actualStageSize!!.height.toDp()
+                        val baseWidth = 360.dp  // BeatConverter의 기준 크기
+                        val baseHeight = 300.dp
+
+                        val scaleX = actualWidthDp / baseWidth
+                        val scaleY = actualHeightDp / baseHeight
+
+                        character.copy(
+                            position = DpOffset(
+                                x = character.position.x * scaleX,
+                                y = character.position.y * scaleY
+                            ),
+                            size = character.size * scaleY  // 높이 기준으로 스케일
+                        )
+                    }
+                } else {
+                    character
+                }
+
+                val isInteracting = state.interactionState.characterId == character.id &&
+                        state.interactionState.dialogue != null
+                val interactionCharacter =
+                    if (isInteracting && scaledCharacter.spriteAnimation != null) {
+                        val animationType = CharacterInteractionSystem.getAnimationForEmotion(
+                            state.interactionState.emotion
+                        )
+                        scaledCharacter.copy(
+                            position = DpOffset(
+                                scaledCharacter.position.x,
+                                scaledCharacter.position.y - 10.dp
+                            ),
+                            scale = 1.15f,
+                            spriteAnimation = scaledCharacter.spriteAnimation.copy(
+                                currentAnimation = animationType,
+                                isAnimating = true,
+                            ),
+                        )
+                    } else {
+                        scaledCharacter
             }
 
             key(character.id) {
@@ -133,18 +172,50 @@ internal fun StageViewContent(
 
         // 말풍선들 (재생 중일 때만)
         if (state.playbackState.isPlaying) {
+            // 스케일링된 캐릭터 리스트 생성
+            val scaledCharacters = if (actualStageSize != null && currentScene != null) {
+                with(density) {
+                    val actualWidthDp = actualStageSize!!.width.toDp()
+                    val actualHeightDp = actualStageSize!!.height.toDp()
+                    val baseWidth = 360.dp
+                    val baseHeight = 300.dp
+
+                    val scaleX = actualWidthDp / baseWidth
+                    val scaleY = actualHeightDp / baseHeight
+
+                    currentScene.characters.map { char ->
+                        char.copy(
+                            position = DpOffset(
+                                x = char.position.x * scaleX,
+                                y = char.position.y * scaleY
+                            ),
+                            size = char.size * scaleY
+                        )
+                    }
+                }
+            } else {
+                currentScene?.characters ?: emptyList()
+            }
+
             currentScene?.dialogues?.forEachIndexed { index, dialogue ->
-                key(state.playbackState.currentSceneIndex, dialogue.id) {  // dialogue.id 직접 사용
-                    // 실시간 캐릭터 위치 추적을 위해 캐릭터 찾기
+                key(state.playbackState.currentSceneIndex, dialogue.id) {
+                    // 스케일링된 캐릭터에서 찾기
                     val speakingCharacter = dialogue.speakerName?.let { name ->
-                        currentScene.characters.find { it.name == name }
+                        scaledCharacters.find { it.name == name }
                     }
 
                     AnimatedSpeechBubble(
                         dialogue = dialogue,
                         sceneIndex = state.playbackState.currentSceneIndex,
                         playbackSpeed = state.playbackState.speed,
-                        character = speakingCharacter,  // 실시간 위치 추적용
+                        character = speakingCharacter,  // 스케일링된 위치
+                        showDebugPoints = state.showDebugPoints,
+                        allCharacters = scaledCharacters,  // 스케일링된 리스트
+                        stageWidthDp = if (actualStageSize != null) {
+                            with(density) { actualStageSize!!.width.toDp() }
+                        } else {
+                            260.dp
+                        },
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -177,15 +248,37 @@ internal fun StageViewContent(
             }
         }
 
-        // 디버그 점 표시
+        // 디버그 점 표시 (캐릭터 위치만)
             if (state.showDebugPoints) {
-                DebugPointsOverlay(
-                    characters = currentScene?.characters ?: emptyList(),
-                    dialogues = if (state.playbackState.isPlaying) {
-                        currentScene?.dialogues ?: emptyList()
+                // 스케일링된 캐릭터 리스트 (말풍선과 동일)
+                val scaledCharactersForDebug =
+                    if (actualStageSize != null && currentScene != null) {
+                        with(density) {
+                            val actualWidthDp = actualStageSize!!.width.toDp()
+                            val actualHeightDp = actualStageSize!!.height.toDp()
+                            val baseWidth = 360.dp
+                            val baseHeight = 300.dp
+
+                            val scaleX = actualWidthDp / baseWidth
+                            val scaleY = actualHeightDp / baseHeight
+
+                            currentScene.characters.map { char ->
+                                char.copy(
+                                    position = DpOffset(
+                                        x = char.position.x * scaleX,
+                                        y = char.position.y * scaleY
+                                    ),
+                                    size = char.size * scaleY
+                                )
+                            }
+                        }
                     } else {
-                        emptyList()
-                    },
+                        currentScene?.characters ?: emptyList()
+                    }
+
+                DebugPointsOverlay(
+                    characters = scaledCharactersForDebug,
+                    dialogues = emptyList(),  // 말풍선 점은 AnimatedSpeechBubble 내부에서 처리
                     modifier = Modifier.fillMaxSize()
                 )
         }

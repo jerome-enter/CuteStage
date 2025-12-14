@@ -657,14 +657,15 @@ private fun LayerEditSection(
                     beatIndex = state.selectedBeatIndex,
                     characters = state.characters,
                     backgroundLocation = selectedBeat.locationLayer.location,
-                    onAddMovement = { charId, fromPos, toPos, startT, endT ->
+                    onAddMovement = { charId, fromPos, toPos, startT, endT, facingDir ->
                         viewModel.addMovementInline(
                             state.selectedBeatIndex,
                             charId,
                             fromPos,
                             toPos,
                             startT,
-                            endT)
+                            endT,
+                            facingDir)
                     },
                     onRemoveMovement = { viewModel.removeMovement(state.selectedBeatIndex, it) }
                 )

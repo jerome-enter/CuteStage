@@ -70,16 +70,41 @@ class TimelineToScriptConverter @Inject constructor(
 
             val type = beatData["type"] as? String
 
-            // 기존 Beat 또는 새로운 LayeredBeat 둘 다 지원
-            if (type != "beat" && type != "layered_beat") {
-                return null
+            when (type) {
+                "beat", "layered_beat" -> {
+                    // v1: Classic Beat
+                    val beatsJson = beatData["beats"] as? String ?: return null
+                    val beats =
+                        com.example.cutestage.stage.beat.BeatJsonHelper.toBeatList(beatsJson)
+                    com.example.cutestage.stage.beat.BeatConverter.beatsToTheaterScript(beats)
+                }
+
+                "layered_beat_v2" -> {
+                    // v2: LayeredBeat 직접 처리
+                    val layeredBeatsJson = beatData["layeredBeats"] as? String ?: return null
+                    val charactersJson = beatData["characters"] as? String ?: "[]"
+
+                    val layeredBeats = gson.fromJson(
+                        layeredBeatsJson,
+                        Array<com.example.cutestage.stage.beat.LayeredBeat>::class.java
+                    ).toList()
+
+                    val characters = gson.fromJson(
+                        charactersJson,
+                        Array<com.example.cutestage.stage.beat.CharacterInfo>::class.java
+                    ).toList()
+
+                    // LayeredBeat를 Classic Beat로 변환 후 TheaterScript로
+                    val classicBeats =
+                        com.example.cutestage.stage.beat.LayeredBeatConverter.toClassicBeats(
+                            layeredBeats,
+                            characters
+                        )
+                    com.example.cutestage.stage.beat.BeatConverter.beatsToTheaterScript(classicBeats)
+                }
+
+                else -> null
             }
-
-            val beatsJson = beatData["beats"] as? String ?: return null
-            val beats = com.example.cutestage.stage.beat.BeatJsonHelper.toBeatList(beatsJson)
-
-            // Beat 리스트를 TheaterScript로 변환
-            com.example.cutestage.stage.beat.BeatConverter.beatsToTheaterScript(beats)
         } catch (e: Exception) {
             e.printStackTrace() // 디버깅을 위해 에러 출력
             null

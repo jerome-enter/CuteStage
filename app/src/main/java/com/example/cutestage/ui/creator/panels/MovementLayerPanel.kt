@@ -27,7 +27,7 @@ fun MovementLayerPanel(
     beatIndex: Int,
     characters: List<CharacterInfo>,
     backgroundLocation: StageLocation,
-    onAddMovement: (String, StagePosition?, StagePosition, Float, Float) -> Unit, // fromPos, toPos, startTime, endTime
+    onAddMovement: (String, StagePosition?, StagePosition, Float, Float, FacingDirection) -> Unit, // fromPos, toPos, startTime, endTime, facingDirection
     onRemoveMovement: (String) -> Unit
 ) {
     var isEditing by remember { mutableStateOf(false) }
@@ -37,6 +37,7 @@ fun MovementLayerPanel(
     var toPosition by remember { mutableStateOf(StagePosition.CENTER) }
     var startTime by remember { mutableStateOf(0f) }
     var endTime by remember { mutableStateOf(1f) }
+    var facingDirection by remember { mutableStateOf(FacingDirection.RIGHT) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -78,6 +79,7 @@ fun MovementLayerPanel(
                     toPosition = toPosition,
                     startTime = startTime,
                     endTime = endTime,
+                    facingDirection = facingDirection,
                     onCharacterChange = { selectedCharacterId = it },
                     onManualStartChange = { useManualStart = it },
                     onFromPositionChange = { fromPosition = it },
@@ -90,6 +92,7 @@ fun MovementLayerPanel(
                         }
                     },
                     onEndTimeChange = { endTime = it },
+                    onFacingDirectionChange = { facingDirection = it },
                     onCancel = {
                         isEditing = false
                         selectedCharacterId = ""
@@ -98,6 +101,7 @@ fun MovementLayerPanel(
                         toPosition = StagePosition.CENTER
                         startTime = 0f
                         endTime = 1f
+                        facingDirection = FacingDirection.RIGHT
                     },
                     onAdd = {
                         if (selectedCharacterId.isNotEmpty()) {
@@ -107,7 +111,8 @@ fun MovementLayerPanel(
                                 actualFrom,
                                 toPosition,
                                 startTime,
-                                endTime
+                                endTime,
+                                facingDirection
                             )
                             selectedCharacterId = ""
                             useManualStart = false
@@ -115,6 +120,7 @@ fun MovementLayerPanel(
                             toPosition = StagePosition.CENTER
                             startTime = 0f
                             endTime = 1f
+                            facingDirection = FacingDirection.RIGHT
                             isEditing = false
                         }
                     }
@@ -210,12 +216,14 @@ fun InlineMovementEditor(
     toPosition: StagePosition,
     startTime: Float,
     endTime: Float,
+    facingDirection: FacingDirection,
     onCharacterChange: (String) -> Unit,
     onManualStartChange: (Boolean) -> Unit,
     onFromPositionChange: (StagePosition?) -> Unit,
     onToPositionChange: (StagePosition) -> Unit,
     onStartTimeChange: (Float) -> Unit,
     onEndTimeChange: (Float) -> Unit,
+    onFacingDirectionChange: (FacingDirection) -> Unit,
     onCancel: () -> Unit,
     onAdd: () -> Unit
 ) {
@@ -276,19 +284,65 @@ fun InlineMovementEditor(
 
         // 캐릭터가 선택되었을 때만 나머지 입력 필드 표시
         if (selectedCharacterId.isNotEmpty()) {
-            // 시작 위치 (선택적)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(
-                checked = useManualStart,
-                onCheckedChange = onManualStartChange
-            )
-            Text(
-                "시작 위치 수동 지정",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            // 시작 위치 (선택적) + 방향 토글
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = useManualStart,
+                        onCheckedChange = onManualStartChange
+                    )
+                    Text(
+                        "시작 위치 수동 지정",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                // 방향 토글
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // 왼쪽 화살표
+                    TextButton(
+                        onClick = { onFacingDirectionChange(FacingDirection.LEFT) },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            "<",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = if (facingDirection == FacingDirection.LEFT) FontWeight.Bold else FontWeight.Normal,
+                            color = if (facingDirection == FacingDirection.LEFT)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
+                    }
+
+                    Text(
+                        "보는방향",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+
+                    // 오른쪽 화살표
+                    TextButton(
+                        onClick = { onFacingDirectionChange(FacingDirection.RIGHT) },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            ">",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = if (facingDirection == FacingDirection.RIGHT) FontWeight.Bold else FontWeight.Normal,
+                            color = if (facingDirection == FacingDirection.RIGHT)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
+                    }
+                }
         }
 
         // 목표 위치 선택 (미니맵)
@@ -317,6 +371,7 @@ fun InlineMovementEditor(
             StageMiniMap(
                 selectedPosition = touchPosition,
                 characterName = characters.find { it.id == selectedCharacterId }?.name,
+                facingDirection = facingDirection,
                 backgroundLocation = backgroundLocation,
                 onPositionChange = {
                     touchPosition = it

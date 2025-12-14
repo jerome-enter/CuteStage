@@ -16,6 +16,35 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 /**
+ * 텍스트 길이 기반으로 말풍선 너비 예측
+ *
+ * 말풍선 구성:
+ * - padding: 12dp * 2 = 24dp
+ * - 텍스트: 대략 8dp per 문자 (한글 기준)
+ * - 최소: 60dp, 최대: 180dp
+ */
+internal fun estimateBubbleWidth(text: String, speakerName: String?): androidx.compose.ui.unit.Dp {
+    // 이름이 있으면 추가 높이로 인해 너비도 영향받을 수 있음
+    val hasName = !speakerName.isNullOrBlank()
+
+    // 텍스트 길이 (한글은 2바이트로 계산)
+    val textLength = text.length
+
+    // 대략적인 너비 계산
+    // - 패딩: 24dp
+    // - 한글 1글자: 약 12dp (한글은 넓음)
+    // - 최대 너비: 180dp
+    val basePadding = 24
+    val charWidth = 12
+    val estimatedContentWidth = textLength * charWidth
+
+    val totalWidth = (basePadding + estimatedContentWidth).dp
+
+    // 최소 60dp, 최대 180dp로 제한
+    return totalWidth.coerceIn(60.dp, 180.dp)
+}
+
+/**
  * 애니메이션이 적용된 말풍선
  *
  * 타이밍 구조:
@@ -32,6 +61,9 @@ internal fun AnimatedSpeechBubble(
     playbackSpeed: Float,
     modifier: Modifier = Modifier,
     character: CharacterState? = null,
+    showDebugPoints: Boolean = false,
+    allCharacters: List<CharacterState> = emptyList(),  // 색상 결정용
+    stageWidthDp: androidx.compose.ui.unit.Dp = 260.dp,  // 실제 스테이지 너비
 ) {
     // 빈 대사는 렌더링하지 않음 (음성 재생 방지)
     if (dialogue.text.isBlank()) {
@@ -77,26 +109,51 @@ internal fun AnimatedSpeechBubble(
                 .fillMaxSize()
                 .padding(10.dp), // 대화창이 StageView 경계에서 10dp 떨어지도록
         ) {
-            // 실시간 캐릭터 위치 기반 말풍선 위치 계산 (바닥 중앙 기준)
-            val bubbleX = if (character != null) {
-                // 캐릭터 바닥 중앙 (position.x + size/2)에서 말풍선 중앙 정렬
-                (character.position.x + character.size / 2 - 90.dp).coerceIn(0.dp, 280.dp - 180.dp)
-            } else {
-                // 캐릭터가 없으면 기존 방식 (고정 위치)
-                dialogue.position.x.coerceIn(0.dp, 280.dp - 180.dp)
-            }
+            // 말풍선 위치 계산
+            val bubbleX: androidx.compose.ui.unit.Dp
+            val bubbleY: androidx.compose.ui.unit.Dp
 
-            val bubbleY = if (character != null) {
-                // 캐릭터 머리 위에 표시
-                60.dp
+            if (character != null) {
+                // 캐릭터 바닥 중앙 X
+                println("Debug_SpeechBubble 캐릭터 위치: ${character.name} position.x=${character.position.x} size=${character.size}")
+                val characterCenterX = character.position.x + character.size / 2
+
+                // 텍스트 길이로 실제 말풍선 너비 예측
+                val bubbleWidth = estimateBubbleWidth(dialogue.text, dialogue.speakerName)
+                val stageWidth = stageWidthDp  // 실제 스테이지 너비 (스케일링 적용됨)
+
+                // 말풍선을 중앙에 배치했을 때 오른쪽 끝
+                val bubbleRightEdge = characterCenterX + bubbleWidth / 2
+
+                // 오른쪽 경계를 넘치는 양 (최대 60dp까지만 이동)
+                val rightOverflow =
+                    (bubbleRightEdge - stageWidth).coerceAtLeast(0.dp).coerceAtMost(60.dp)
+
+                // 왼쪽 경계를 넘치는 양 (최대 60dp까지만 이동)
+                val leftOverflow = (0.dp - (characterCenterX - bubbleWidth / 2)).coerceAtLeast(0.dp)
+                    .coerceAtMost(60.dp)
+
+                // 넘치는 만큼만 조정 (하지만 최대 60dp까지만)
+                val adjustedCenterX = characterCenterX - rightOverflow + leftOverflow
+                bubbleX = adjustedCenterX - bubbleWidth / 2
+                bubbleY = 60.dp  // 고정 높이
+
+                println(
+                    "Debug_SpeechBubble 말풍선 위치: ${character.name} visible=$visible bubbleX=$bubbleX text=${
+                        dialogue.text.take(
+                            10
+                        )
+                    }"
+                )
             } else {
-                // 기존 방식
-                dialogue.position.y.coerceIn(0.dp, 280.dp - 100.dp)
+                // 캐릭터가 없으면 기존 방식
+                bubbleX = dialogue.position.x.coerceIn(0.dp, 280.dp - 180.dp)
+                bubbleY = dialogue.position.y.coerceIn(0.dp, 280.dp - 100.dp)
             }
 
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White, // 대화창 배경 흰색
+                color = Color.White,
                 shadowElevation = 4.dp,
                 modifier = Modifier
                     .offset(x = bubbleX, y = bubbleY)
@@ -105,7 +162,7 @@ internal fun AnimatedSpeechBubble(
                 Column(
                     modifier = Modifier.padding(12.dp),
                 ) {
-                    // 캐릭터 이름 (선택)
+                    // 캐릭터 이름
                     dialogue.speakerName?.let { name ->
                         Text(
                             text = name,
@@ -119,12 +176,65 @@ internal fun AnimatedSpeechBubble(
                     TypewriterText(
                         text = dialogue.text,
                         sceneIndex = sceneIndex,
-                        startTyping = visible, // 말풍선 표시와 동시에 타자기 시작
+                        startTyping = visible,
                         style = MaterialTheme.typography.bodyMedium,
                         typingSpeedMs = dialogue.typingSpeedMs,
                         voice = dialogue.voice,
                         playbackSpeed = playbackSpeed,
-                        notes = dialogue.notes, // 노래 음표 전달
+                        notes = dialogue.notes,
+                    )
+                }
+            }
+
+            // 디버그 점 (visible일 때만) - 말풍선 위에 그리기
+            if (showDebugPoints && character != null) {
+                androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                    // 무지개 색상 팔레트
+                    val rainbowColors = listOf(
+                        androidx.compose.ui.graphics.Color(0xFFFF0000),  // 빨강
+                        androidx.compose.ui.graphics.Color(0xFFFF7F00),  // 주황
+                        androidx.compose.ui.graphics.Color(0xFFFFFF00),  // 노랑
+                        androidx.compose.ui.graphics.Color(0xFF00FF00),  // 초록
+                        androidx.compose.ui.graphics.Color(0xFF0000FF),  // 파랑
+                        androidx.compose.ui.graphics.Color(0xFF4B0082),  // 남색
+                        androidx.compose.ui.graphics.Color(0xFF9400D3)   // 보라
+                    )
+
+                    // 캐릭터 인덱스 찾기
+                    val characterIndex = allCharacters.indexOf(character)
+                    val color = if (characterIndex >= 0) {
+                        rainbowColors[characterIndex % rainbowColors.size]
+                    } else {
+                        androidx.compose.ui.graphics.Color.White
+                    }
+
+                    // 말풍선 중앙 위치
+                    val characterCenterX = character.position.x.toPx() + (character.size / 2).toPx()
+                    val bubbleWidth = estimateBubbleWidth(dialogue.text, dialogue.speakerName)
+                    val stageWidth = stageWidthDp.toPx()
+
+                    val bubbleRightEdge = characterCenterX + (bubbleWidth / 2).toPx()
+                    val rightOverflow = (bubbleRightEdge - stageWidth).coerceAtLeast(0f)
+                        .coerceAtMost(60.dp.toPx())
+                    val leftOverflow =
+                        (0f - (characterCenterX - (bubbleWidth / 2).toPx())).coerceAtLeast(0f)
+                            .coerceAtMost(60.dp.toPx())
+
+                    val bubbleCenterX = characterCenterX - rightOverflow + leftOverflow
+                    val bubbleCenterY = 60.dp.toPx() + 30.dp.toPx()
+
+                    println(
+                        "Debug_SpeechBubble 말풍선 점: ${character.name} [$characterIndex] ${
+                            dialogue.text.take(
+                                10
+                            )
+                        }"
+                    )
+
+                    drawCircle(
+                        color = color,
+                        radius = 10.dp.toPx(),
+                        center = androidx.compose.ui.geometry.Offset(bubbleCenterX, bubbleCenterY)
                     )
                 }
             }

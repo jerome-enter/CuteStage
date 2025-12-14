@@ -31,10 +31,22 @@ internal fun DebugPointsOverlay(
         Color(0xFF9400D3)   // 보라
     )
 
-    Box(
-        modifier = modifier.padding(10.dp)  // StageView 경계와 동일하게
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
+    // 디버그 로그
+    println("Debug_StageViewDebug 캐릭터 리스트 순서:")
+    characters.forEachIndexed { index, character ->
+        println("Debug_StageViewDebug   [$index] ${character.name}(${character.id})")
+    }
+    println("Debug_StageViewDebug 대사 리스트:")
+    dialogues.forEach { dialogue ->
+        println("Debug_StageViewDebug   ${dialogue.speakerName}: \"${dialogue.text}\"")
+    }
+
+    // 주의: AnimatedSpeechBubble도 padding(10.dp) 있음!
+    // 디버그 점도 동일한 padding 적용
+    Box(modifier = modifier) {
+        Canvas(modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)) {
             // 캐릭터 위치 점 그리기 (바닥 중앙)
             characters.forEachIndexed { index, character ->
                 // 캐릭터 순서에 따라 무지개 색상 할당
@@ -65,18 +77,26 @@ internal fun DebugPointsOverlay(
                     val characterIndex = characters.indexOf(character)
                     val color = rainbowColors[characterIndex % rainbowColors.size]
 
-                    // 캐릭터 바닥 중앙 기준으로 말풍선 위치 계산
-                    val characterBottomCenterX =
-                        character.position.x.toPx() + (character.size / 2).toPx()
+                    // 캐릭터 중앙 X
+                    val characterCenterX = character.position.x.toPx() + (character.size / 2).toPx()
 
-                    // 말풍선 위치 (바닥 중앙에서 계산)
-                    val bubbleX = (characterBottomCenterX - 90.dp.toPx())
-                        .coerceIn(0f, (280.dp - 180.dp).toPx())
-                    val bubbleY = 60.dp.toPx()
+                    // AnimatedSpeechBubble과 동일한 계산
+                    val bubbleWidth = estimateBubbleWidth(dialogue.text, dialogue.speakerName)
+                    val stageWidth = 260.dp.toPx()
 
-                    // 말풍선 중앙 위치 (말풍선 너비 180dp의 중앙)
-                    val bubbleCenterX = bubbleX + 90.dp.toPx()
-                    val bubbleCenterY = bubbleY + 30.dp.toPx()
+                    // 말풍선을 중앙에 배치했을 때 오른쪽 끝
+                    val bubbleRightEdge = characterCenterX + (bubbleWidth / 2).toPx()
+
+                    // 오른쪽 경계를 넘치는 양
+                    val rightOverflow = (bubbleRightEdge - stageWidth).coerceAtLeast(0f)
+
+                    // 왼쪽 경계를 넘치는 양
+                    val leftOverflow =
+                        (0f - (characterCenterX - (bubbleWidth / 2).toPx())).coerceAtLeast(0f)
+
+                    // 넘치는 만큼만 조정
+                    val bubbleCenterX = characterCenterX - rightOverflow + leftOverflow
+                    val bubbleCenterY = 60.dp.toPx() + 30.dp.toPx()
 
                     drawCircle(
                         color = color,

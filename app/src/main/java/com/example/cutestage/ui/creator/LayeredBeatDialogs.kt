@@ -518,6 +518,7 @@ fun AddMovementDialog(
 internal fun StageMiniMap(
     selectedPosition: StagePosition,
     characterName: String? = null,  // ✅ 선택된 캐릭터 이름
+    facingDirection: FacingDirection = FacingDirection.RIGHT,  // ✅ 바라보는 방향
     backgroundLocation: StageLocation = StageLocation.STAGE_FLOOR,
     onPositionChange: (StagePosition) -> Unit
 ) {
@@ -582,13 +583,24 @@ internal fun StageMiniMap(
             val boxWidth = constraints.maxWidth.toFloat()
             val boxHeight = constraints.maxHeight.toFloat()
 
+            // 핀의 크기 (40dp 원 + 화살표 20dp)
+            val pinRadius = 20.dp
+            val arrowWidth = 20.dp
+
+            // Row 전체 너비 계산 (왼쪽 화살표 + 핀 + 오른쪽 화살표)
+            val totalWidth = when (facingDirection) {
+                FacingDirection.LEFT -> arrowWidth + pinRadius * 2 + 4.dp  // 화살표 + 핀 + 간격
+                FacingDirection.RIGHT -> pinRadius * 2 + 4.dp + arrowWidth  // 핀 + 간격 + 화살표
+            }
+
             // Column으로 이름과 핀을 수직 배치
+            // ✅ 클릭한 위치가 핀의 중앙이 되도록 offset 조정
             Column(
                 modifier = Modifier
                     .offset {
                         androidx.compose.ui.unit.IntOffset(
-                            x = (pinX * boxWidth).toInt(),
-                            y = (pinY * boxHeight).toInt()
+                            x = (pinX * boxWidth - (totalWidth / 2).toPx()).toInt(),  // 중앙 정렬
+                            y = (pinY * boxHeight - pinRadius.toPx()).toInt()  // 핀 중심이 클릭 위치
                         )
                     },
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -612,25 +624,68 @@ internal fun StageMiniMap(
                     }
                 }
 
-                // 2. 핀 (아래)
-                Canvas(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .offset(y = (-50).dp)  // 전체를 위로
+                // 2. 핀 + 화살표 (아래)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.offset(y = (-50).dp)  // 전체를 위로
                 ) {
+                    // 왼쪽 화살표 (왼쪽 보기일 때)
+                    if (facingDirection == FacingDirection.LEFT) {
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            val path = androidx.compose.ui.graphics.Path().apply {
+                                moveTo(size.width * 0.7f, size.height * 0.2f)
+                                lineTo(size.width * 0.3f, size.height * 0.5f)
+                                lineTo(size.width * 0.7f, size.height * 0.8f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = Color(0xFF6200EE),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 3.dp.toPx(),
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                                    join = androidx.compose.ui.graphics.StrokeJoin.Round
+                                )
+                            )
+                        }
+                    }
+
                     // 핀 원
-                    drawCircle(
-                        color = Color(0xFF6200EE),
-                        radius = 20.dp.toPx(),
-                        center = Offset(size.width / 2, size.height / 2),
-                        alpha = 0.7f
-                    )
-                    // 핀 중심점
-                    drawCircle(
-                        color = Color.White,
-                        radius = 8.dp.toPx(),
-                        center = Offset(size.width / 2, size.height / 2)
-                    )
+                    Canvas(modifier = Modifier.size(40.dp)) {
+                        // 핀 원
+                        drawCircle(
+                            color = Color(0xFF6200EE),
+                            radius = 20.dp.toPx(),
+                            center = Offset(size.width / 2, size.height / 2),
+                            alpha = 0.7f
+                        )
+                        // 핀 중심점
+                        drawCircle(
+                            color = Color.White,
+                            radius = 8.dp.toPx(),
+                            center = Offset(size.width / 2, size.height / 2)
+                        )
+                    }
+
+                    // 오른쪽 화살표 (오른쪽 보기일 때)
+                    if (facingDirection == FacingDirection.RIGHT) {
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            val path = androidx.compose.ui.graphics.Path().apply {
+                                moveTo(size.width * 0.3f, size.height * 0.2f)
+                                lineTo(size.width * 0.7f, size.height * 0.5f)
+                                lineTo(size.width * 0.3f, size.height * 0.8f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = Color(0xFF6200EE),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 3.dp.toPx(),
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                                    join = androidx.compose.ui.graphics.StrokeJoin.Round
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }

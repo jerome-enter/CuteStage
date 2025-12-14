@@ -211,6 +211,9 @@ object LayeredBeatConverter {
         val movements = beat.layers.characters.flatMap { characterAction ->
             val movementList = mutableListOf<MovementEntry>()
 
+            // Direction을 FacingDirection으로 변환
+            val facingDirection = characterAction.facingDirection.toFacingDirection()
+
             when (characterAction.movement.type) {
                 MovementType.STAY -> {
                     // 한 위치에 머무름
@@ -221,7 +224,8 @@ object LayeredBeatConverter {
                                 toPosition = from.toStagePosition(),
                                 startTime = 0f,
                                 endTime = 0f,
-                                autoWalk = false
+                                autoWalk = false,
+                                facingDirection = facingDirection
                             )
                         )
                     }
@@ -239,7 +243,8 @@ object LayeredBeatConverter {
                                 toPosition = toPos,
                                 startTime = 0f,
                                 endTime = beat.duration / 2, // 중간에 도착
-                                autoWalk = true
+                                autoWalk = true,
+                                facingDirection = facingDirection
                             )
                         )
                     }
@@ -254,7 +259,8 @@ object LayeredBeatConverter {
                                 toPosition = to.toStagePosition(),
                                 startTime = 0f,
                                 endTime = 1f,
-                                autoWalk = true
+                                autoWalk = true,
+                                facingDirection = facingDirection
                             )
                         )
                     }
@@ -271,7 +277,8 @@ object LayeredBeatConverter {
                                 toPosition = from.toStagePosition(), // 같은 위치에서 시작
                                 startTime = exitStart,
                                 endTime = exitStart + 1f,
-                                autoWalk = true
+                                autoWalk = true,
+                                facingDirection = facingDirection
                             )
                         )
                     }
@@ -289,7 +296,8 @@ object LayeredBeatConverter {
                                 toPosition = toPos,
                                 startTime = 0f,
                                 endTime = beat.duration / 2,
-                                autoWalk = true
+                                autoWalk = true,
+                                facingDirection = facingDirection
                             )
                         )
                     }
@@ -369,6 +377,18 @@ object LayeredBeatConverter {
             GestureType.HUG -> StageActionType.WAVE // 매핑 없음
             GestureType.PUSH -> StageActionType.WAVE // 매핑 없음
             GestureType.PULL -> StageActionType.WAVE // 매핑 없음
+        }
+
+    }
+
+    /**
+     * Direction을 FacingDirection으로 변환
+     */
+    private fun Direction.toFacingDirection(): FacingDirection {
+        return when (this) {
+            Direction.LEFT -> FacingDirection.LEFT
+            Direction.RIGHT -> FacingDirection.RIGHT
+            Direction.CENTER, Direction.FORWARD, Direction.BACKWARD -> FacingDirection.RIGHT
         }
     }
 }
