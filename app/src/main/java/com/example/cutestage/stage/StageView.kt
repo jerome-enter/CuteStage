@@ -421,52 +421,94 @@ private fun StageControlPanel(
 }
 
 /**
- * 재생 속도 조절 버튼 (작고 컴팩트하게)
+ * 재생 속도 조절 버튼 (팝업 방식)
  */
 @Composable
 private fun SpeedControl(
     speed: Float,
     onSpeedChange: (Float) -> Unit
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val speeds = listOf(1f, 1.5f, 2f)
-        speeds.forEach { s ->
-            val isSelected = speed == s
-            FilterChip(
-                selected = isSelected,
-                onClick = { onSpeedChange(s) },
-                label = {
-                    Text(
-                        text = "${s}x",
-                        fontSize = 10.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected)
-                            MaterialTheme.colorScheme.onSurface
-                        else
-                            Color.DarkGray
-                    )
-                },
-                modifier = Modifier
-                    .height(26.dp)
-                    .defaultMinSize(minWidth = 1.dp),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = MaterialTheme.colorScheme.outline,
-                    selectedBorderColor = MaterialTheme.colorScheme.outline,
-                    borderWidth = 1.dp,
-                    selectedBorderWidth = 1.dp
-                ),
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+    var showMenu by remember { mutableStateOf(false) }
+
+    Box {
+        // 현재 속도 표시 버튼
+        Surface(
+            onClick = { showMenu = true },
+            shape = RoundedCornerShape(8.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.height(28.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "${speed}x",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
-            )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "속도 선택",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+
+        // 속도 선택 드롭다운
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            val speeds = listOf(0.5f, 1f, 1.5f, 2f, 2.5f, 3f)
+
+            speeds.forEach { s ->
+                SpeedMenuItem(
+                    speed = s,
+                    currentSpeed = speed,
+                    onSelect = {
+                        onSpeedChange(s)
+                        showMenu = false
+                    }
+                )
+            }
         }
     }
+}
+
+/**
+ * 속도 메뉴 아이템
+ */
+@Composable
+private fun SpeedMenuItem(
+    speed: Float,
+    currentSpeed: Float,
+    onSelect: () -> Unit
+) {
+    DropdownMenuItem(
+        text = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (currentSpeed == speed) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Spacer(modifier = Modifier.size(16.dp))
+                }
+                Text("${speed}x")
+            }
+        },
+        onClick = onSelect
+    )
 }
 
 /**
