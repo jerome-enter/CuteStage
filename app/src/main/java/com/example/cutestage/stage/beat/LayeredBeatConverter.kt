@@ -391,4 +391,283 @@ object LayeredBeatConverter {
             Direction.CENTER, Direction.FORWARD, Direction.BACKWARD -> FacingDirection.RIGHT
         }
     }
+
+    /**
+     * LayeredBeat를 직접 TheaterScript로 변환 (Classic Beat 경유 없음)
+     * 이 방식은 여러 이동을 올바르게 처리합니다.
+     */
+    fun layeredBeatsToTheaterScript(
+        layeredBeats: List<LayeredBeat>,
+        allCharacters: List<CharacterInfo>
+    ): com.example.cutestage.stage.TheaterScript {
+        val scenes = layeredBeats.flatMap { beat ->
+            layeredBeatToScenes(beat, allCharacters)
+        }
+
+        return com.example.cutestage.stage.TheaterScript(
+            scenes = scenes,
+            debug = false
+        )
+    }
+
+    /**
+     * 단일 LayeredBeat를 여러 Scene으로 분할
+     * 이동이 발생할 때마다 Scene을 분할하여 애니메이션 처리
+     */
+    private fun layeredBeatToScenes(
+        beat: LayeredBeat,
+        allCharacters: List<CharacterInfo>
+    ): List<com.example.cutestage.stage.SceneState> {
+        println("Debug_Convert Beat[${beat.name}]: 이동 ${beat.movementLayer.movements.size}개")
+
+        // 1. Beat에 등장하는 모든 캐릭터 수집
+        val characterIds = (
+                beat.movementLayer.movements.map { it.characterId } +
+                        beat.dialogueLayer.dialogues.map { it.characterId }
+                ).distinct()
+
+        // 2. 각 캐릭터의 현재 위치 추적 (초기 위치)
+        val characterPositions = mutableMapOf<String, StagePosition>()
+
+        // 3. 각 캐릭터의 첫 이동에서 초기 위치 설정
+        characterIds.forEach { charId ->
+            val firstMovement = beat.movementLayer.movements
+                .filter { it.characterId == charId }
+                .minByOrNull { it.startTime }
+
+            if (firstMovement != null) {
+                // fromPosition이 있으면 사용, 없으면 toPosition 사용
+                val initialPos = firstMovement.fromPosition ?: firstMovement.toPosition
+                characterPositions[charId] = initialPos
+                println("Debug_Convert   캐릭터[$charId] 초기 위치: (${initialPos.x}, ${initialPos.y})")
+            }
+        }
+
+        // 4. 모든 이동을 시간순으로 정렬하고 Scene 분할 지점 결정
+        data class TimeEvent(
+            val time: Float,
+            val type: String,
+            val characterId: String,
+            val movement: MovementEntry?
+        )
+
+        val movementEvents = mutableListOf<TimeEvent>()
+        beat.movementLayer.movements.forEach { mov ->
+            // 시작 시간에 이동 시작 이벤트 추가
+            if (mov.startTime < mov.endTime) {
+                movementEvents.add(TimeEvent(mov.startTime, "movement_start", mov.characterId, mov))
+            } else {
+                // startTime == endTime인 경우 즉시 배치
+                movementEvents.add(
+                    TimeEvent(
+                        mov.startTime,
+                        "movement_instant",
+                        mov.characterId,
+                        mov
+                    )
+                )
+            }
+        }
+
+        // 이벤트를 시간순으로 정렬
+        movementEvents.sortBy { it.time }
+
+        // 5. Scene 분할: 각 이동이 시작되는 시점마다 Scene 생성
+        val scenes = mutableListOf<com.example.cutestage.stage.SceneState>()
+        var currentTime = 0f
+
+        // 초기 Scene (첫 이동 전)
+        if (movementEvents.isNotEmpty() && movementEvents.first().time > 0f) {
+            val initialCharacters = characterIds.mapNotNull { charId ->
+                val character = allCharacters.find { it.id == charId } ?: return@mapNotNull null
+                val position = characterPositions[charId] ?: StagePosition.CENTER
+                createCharacterState(character, position, false, FacingDirection.RIGHT)
+            }
+
+            val initialScene = com.example.cutestage.stage.SceneState(
+                backgroundRes = getBackgroundRes(beat.locationLayer.location),
+                characters = initialCharacters,
+                dialogues = emptyList(),
+                durationMillis = (movementEvents.first().time * 1000).toLong()
+            )
+            scenes.add(initialScene)
+            println("Debug_Convert   Scene[0]: 초기 위치 고정, 시간=0~${movementEvents.first().time}초")
+            currentTime = movementEvents.first().time
+        }
+
+        // 각 이동 이벤트를 Scene으로 변환
+        movementEvents.forEachIndexed { index, event ->
+            when (event.type) {
+                "movement_start" -> {
+                    val movement = event.movement!!
+                    val duration = movement.endTime - movement.startTime
+
+                    // 현재 위치 업데이트
+                    characterPositions[movement.characterId] = movement.toPosition
+
+                    // 이동하는 캐릭터의 상태 생성
+                    val movingCharacters = characterIds.mapNotNull { charId ->
+                        val character =
+                            allCharacters.find { it.id == charId } ?: return@mapNotNull null
+                        val position = characterPositions[charId] ?: StagePosition.CENTER
+
+                        // facingDirection 설정
+                        val facingDir = if (charId == movement.characterId) {
+                            movement.facingDirection
+                        } else {
+                            FacingDirection.RIGHT // 기본값
+                        }
+
+                        createCharacterState(character, position, false, facingDir)
+                    }
+
+                    // 이 Scene 동안 표시될 대사 필터링
+                    val sceneDialogues = beat.dialogueLayer.dialogues
+                        .filter { it.startTime >= currentTime && it.startTime < movement.endTime }
+                        .map { dialogue ->
+                            val speaker = movingCharacters.find { it.id == dialogue.characterId }
+                            createDialogueState(dialogue, speaker)
+                        }
+
+                    val movementScene = com.example.cutestage.stage.SceneState(
+                        backgroundRes = getBackgroundRes(beat.locationLayer.location),
+                        characters = movingCharacters,
+                        dialogues = sceneDialogues,
+                        durationMillis = (duration * 1000).toLong()
+                    )
+                    scenes.add(movementScene)
+                    println("Debug_Convert   Scene[$index]: ${movement.characterId} 이동, 시간=$currentTime~${movement.endTime}초")
+
+                    currentTime = movement.endTime
+                }
+
+                "movement_instant" -> {
+                    val movement = event.movement!!
+                    // 즉시 배치: 위치만 업데이트
+                    characterPositions[movement.characterId] = movement.toPosition
+                    println("Debug_Convert   즉시 배치: ${movement.characterId} → (${movement.toPosition.x}, ${movement.toPosition.y})")
+                }
+            }
+        }
+
+        // 마지막 Scene (모든 이동 후 대사 처리)
+        val remainingDialogues = beat.dialogueLayer.dialogues
+            .filter { it.startTime >= currentTime }
+
+        if (remainingDialogues.isNotEmpty() || currentTime < beat.duration) {
+            val finalCharacters = characterIds.mapNotNull { charId ->
+                val character = allCharacters.find { it.id == charId } ?: return@mapNotNull null
+                val position = characterPositions[charId] ?: StagePosition.CENTER
+                createCharacterState(
+                    character,
+                    position,
+                    remainingDialogues.any { it.characterId == charId },
+                    FacingDirection.RIGHT
+                )
+            }
+
+            val finalDialogues = remainingDialogues.map { dialogue ->
+                val speaker = finalCharacters.find { it.id == dialogue.characterId }
+                createDialogueState(dialogue, speaker)
+            }
+
+            // 마지막 Scene의 duration 계산: beat.duration과 마지막 대사 끝 시간 중 큰 값 사용
+            val lastDialogueEndTime = if (remainingDialogues.isNotEmpty()) {
+                remainingDialogues.maxOf { dialogue ->
+                    dialogue.startTime + dialogue.calculateDuration()
+                }
+            } else {
+                currentTime
+            }
+
+            val finalDuration = maxOf(beat.duration, lastDialogueEndTime) - currentTime
+
+            val finalScene = com.example.cutestage.stage.SceneState(
+                backgroundRes = getBackgroundRes(beat.locationLayer.location),
+                characters = finalCharacters,
+                dialogues = finalDialogues,
+                durationMillis = (finalDuration * 1000).toLong()
+            )
+            scenes.add(finalScene)
+            println("Debug_Convert   Scene[마지막]: 최종 상태, 시간=$currentTime~${currentTime + finalDuration}초 (beat.duration=${beat.duration}, lastDialogueEnd=${lastDialogueEndTime}), 대사 ${remainingDialogues.size}개")
+        }
+
+        println("Debug_Convert 총 ${scenes.size}개 Scene 생성")
+        return scenes
+    }
+
+    /**
+     * CharacterInfo와 위치로 CharacterState 생성
+     */
+    private fun createCharacterState(
+        character: CharacterInfo,
+        position: StagePosition,
+        isSpeaking: Boolean,
+        facingDirection: FacingDirection = FacingDirection.RIGHT
+    ): com.example.cutestage.stage.CharacterState {
+        val stageWidth = 360.dp
+        val stageHeight = 300.dp
+        val (x, y) = Position(position.x, position.y).toDp(stageWidth, stageHeight)
+
+        val imageRes = com.example.cutestage.stage.CharacterAnimationResources.getAnimationResource(
+            gender = character.gender,
+            animation = com.example.cutestage.stage.CharacterAnimationType.IDLE,
+            frame = 1
+        )
+
+        val animationType = if (isSpeaking) {
+            com.example.cutestage.stage.CharacterAnimationType.SPEAK_NORMAL
+        } else {
+            com.example.cutestage.stage.CharacterAnimationType.IDLE
+        }
+
+        return com.example.cutestage.stage.CharacterState(
+            id = character.id,
+            name = character.name,
+            imageRes = imageRes,
+            position = androidx.compose.ui.unit.DpOffset(x, y),
+            size = 80.dp,
+            alpha = 1f,
+            flipX = (facingDirection == FacingDirection.LEFT), // ✅ 방향 반영
+            spriteAnimation = com.example.cutestage.stage.CharacterAnimationState(
+                gender = character.gender,
+                currentAnimation = animationType,
+                isAnimating = isSpeaking
+            )
+        )
+    }
+
+    /**
+     * DialogueEntry로 DialogueState 생성
+     */
+    private fun createDialogueState(
+        dialogue: DialogueEntry,
+        speaker: com.example.cutestage.stage.CharacterState?
+    ): com.example.cutestage.stage.DialogueState {
+        val position = if (speaker != null) {
+            androidx.compose.ui.unit.DpOffset(
+                x = speaker.position.x + speaker.size / 2,
+                y = speaker.position.y - 60.dp
+            )
+        } else {
+            androidx.compose.ui.unit.DpOffset(180.dp, 100.dp)
+        }
+
+        return com.example.cutestage.stage.DialogueState(
+            id = dialogue.id,
+            text = dialogue.text,
+            position = position,
+            speakerName = speaker?.name,
+            delayMillis = (dialogue.startTime * 1000).toLong(),
+            typingSpeedMs = 50L,
+            voice = speaker?.voice
+        )
+    }
+
+    /**
+     * StageLocation을 배경 리소스로 변환
+     */
+    private fun getBackgroundRes(location: StageLocation): Int {
+        return location.backgroundRes
+    }
 }

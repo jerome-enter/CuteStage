@@ -80,7 +80,7 @@ class TimelineToScriptConverter @Inject constructor(
                 }
 
                 "layered_beat_v2" -> {
-                    // v2: LayeredBeat 직접 처리
+                    // v2: LayeredBeat 직접 TheaterScript로 변환 (Classic Beat 경유 없음)
                     val layeredBeatsJson = beatData["layeredBeats"] as? String ?: return null
                     val charactersJson = beatData["characters"] as? String ?: "[]"
 
@@ -94,13 +94,19 @@ class TimelineToScriptConverter @Inject constructor(
                         Array<com.example.cutestage.stage.beat.CharacterInfo>::class.java
                     ).toList()
 
-                    // LayeredBeat를 Classic Beat로 변환 후 TheaterScript로
-                    val classicBeats =
-                        com.example.cutestage.stage.beat.LayeredBeatConverter.toClassicBeats(
-                            layeredBeats,
-                            characters
-                        )
-                    com.example.cutestage.stage.beat.BeatConverter.beatsToTheaterScript(classicBeats)
+                    println("Debug_Play v2 재생: ${layeredBeats.size}개 비트")
+                    layeredBeats.forEachIndexed { index, beat ->
+                        println("Debug_Play 비트[$index]: 이동 ${beat.movementLayer.movements.size}개, 대사 ${beat.dialogueLayer.dialogues.size}개")
+                        beat.movementLayer.movements.forEachIndexed { mIdx, mov ->
+                            println("Debug_Play   이동[$mIdx]: ${mov.characterId} ${mov.startTime}초→${mov.endTime}초, from=${mov.fromPosition?.x},${mov.fromPosition?.y} to=${mov.toPosition.x},${mov.toPosition.y}")
+                        }
+                    }
+
+                    // ✅ LayeredBeat를 직접 TheaterScript로 변환 (데이터 손실 없음!)
+                    com.example.cutestage.stage.beat.LayeredBeatConverter.layeredBeatsToTheaterScript(
+                        layeredBeats,
+                        characters
+                    )
                 }
 
                 else -> null
