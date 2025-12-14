@@ -69,24 +69,24 @@ object LayeredBeatConverter {
                     to = defaultPosition,
                     speed = Speed.NORMAL
                 )
-            } else if (movements.size == 1) {
-                // 한 곳에만 있음
-                val pos = movements[0].toPosition.toPosition()
-                Movement(
-                    type = MovementType.STAY,
-                    from = pos,
-                    to = pos,
-                    speed = Speed.NORMAL
-                )
             } else {
-                // 여러 이동 - 첫 위치에서 마지막 위치로
+                // 이동 정보 있음 - 시작과 끝 위치 결정
                 val firstMovement = movements.first()
                 val lastMovement = movements.last()
-                val from = firstMovement.getActualFromPosition(null).toPosition()
+
+                // 시작 위치: fromPosition이 있으면 사용, 없으면 toPosition 사용 (첫 이동)
+                val from = (firstMovement.fromPosition ?: firstMovement.toPosition).toPosition()
                 val to = lastMovement.toPosition.toPosition()
 
+                // 시작과 끝 위치가 같으면 STAY, 다르면 MOVE
+                val movementType = if (from.x == to.x && from.y == to.y) {
+                    MovementType.STAY
+                } else {
+                    MovementType.MOVE
+                }
+
                 Movement(
-                    type = MovementType.MOVE,
+                    type = movementType,
                     from = from,
                     to = to,
                     speed = Speed.NORMAL

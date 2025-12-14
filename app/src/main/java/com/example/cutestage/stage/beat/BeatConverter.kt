@@ -106,11 +106,21 @@ object BeatConverter {
             else -> action.emotion.type.toAnimationType(isSpeaking = false)
         }
 
+        // 애니메이션 활성화 여부 결정
+        val isAnimating = when {
+            // 제스처가 있으면 애니메이션
+            action.gesture != null -> true
+            // STAY는 애니메이션 멈춤
+            action.movement.type == MovementType.STAY -> false
+            // 기타는 멈춤 (Beat는 정적 스냅샷)
+            else -> false
+        }
+
         // 애니메이션 상태 생성
         val spriteAnimation = CharacterAnimationState(
             gender = action.gender,
             currentAnimation = animationType,
-            isAnimating = true
+            isAnimating = isAnimating
         )
 
         // 캐릭터 이미지 리소스
